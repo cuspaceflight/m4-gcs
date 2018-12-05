@@ -61,7 +61,8 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)  # Exit on Ctrl-C
 
 # Process arguments
 parser = argparse.ArgumentParser(description=
-                                 'Connect to Firing Controller on given serial port (default /dev/ttyACM0)')
+                                 """Martlet IV Ground Control Software.
+                                 Connect to Firing Controller on given serial port (default /dev/ttyACM0)""")
 parser.add_argument('--port', dest='port', type=str, nargs='?',
                     default='/dev/ttyACM0', help='Serial port to use')
 
