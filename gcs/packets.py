@@ -6,7 +6,16 @@ CUSF 2018/19
 import json
 
 # TODO:
-#     - Define packets used to communicate with the firing controller
+#     - Define packets used to communicate with the firing controller:
+#
+# Current packet variables:       data_struct : Raw packet data (save just in case it's needed later)
+#                                 packet_type : What data is contained in packet
+#                                 timestamp   : When the data was received
+#                                 data        : actual data contained.
+# Input data structure: 128 bytes, of which the first 8 bytes are meta data.
+# Meta data structure : Byte 0   : packet_type
+#                       Byte 1-3 : RESERVED
+#                       Byte 4-7 : timestamp
 
 
 class Packet(object):
@@ -15,15 +24,15 @@ class Packet(object):
         """Form packet from incoming USB bytes
 
         input_struct -- incoming packet in raw bytes form"""
+
         self.data_struct = input_struct
 
-        # TODO: unpack packet, e.g.:
-            # meta_data = struct.unpack('<BBI', self.data_struct[0:6])
-            # self.log_type = meta_data[0]
-            # self.toad_id = meta_data[1]
-            # self.systick = meta_data[2]  # systicks
-            # self.systick_freq = 10000  # Hz
-            # self.timestamp = self.systick / self.systick_freq  # s
+        meta_data = self.data_struct[:8]
+
+        self.packet_type = meta_data[0]
+        self.timestamp = meta_data[4:]
+        self.data = self.data_struct[8:128]
+
 
     def printout(self, textbox):
         """Print packet in the gui
