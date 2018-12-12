@@ -5,9 +5,7 @@ CUSF 2018/19
 
 import json
 
-# TODO:
-#     - Define packets used to communicate with the firing controller:
-#
+
 # Current packet variables:       data_struct : Raw packet data (save just in case it's needed later)
 #                                 packet_type : What data is contained in packet
 #                                 timestamp   : When the data was received
@@ -44,8 +42,18 @@ class Packet(object):
         """Log packet in human readable text file
 
         filename -- absolute path to .txt log file"""
+
+
+
         # TODO: print packet to text file in readable format
         # e.g.: filename.write("\n\n<attribute name>: {}\n".format(self.<attribute>))
+
+        f  = open("valve_controller_log.txt, "w+")
+
+        f.write("Packet ID = %d   , Timestamp = %d   , Data = %d\r\n", self.packet_type, self.timestamp, self.data)
+
+        f.close()
+
         pass
 
     def print_to_js(self, filename):
