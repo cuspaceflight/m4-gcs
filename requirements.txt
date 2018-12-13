@@ -1,2 +1,1 @@
-serial
 pyserial==3.4

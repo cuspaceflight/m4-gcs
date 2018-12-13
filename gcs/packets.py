@@ -4,6 +4,7 @@ CUSF 2018/19
 """
 
 import json
+import struct
 
 
 # Current packet variables:       data_struct : Raw packet data (save just in case it's needed later)
@@ -25,12 +26,11 @@ class Packet(object):
 
         self.data_struct = input_struct
 
-        meta_data = self.data_struct[:8]
+        meta_data = struct.unpack('<BBBBI', self.data_struct[0:8])
 
         self.packet_type = meta_data[0]
-        self.timestamp = meta_data[4:]
+        self.timestamp = meta_data[4]
         self.data = self.data_struct[8:128]
-
 
     def printout(self, textbox):
         """Print packet in the gui
@@ -48,13 +48,8 @@ class Packet(object):
         # TODO: print packet to text file in readable format
         # e.g.: filename.write("\n\n<attribute name>: {}\n".format(self.<attribute>))
 
-        f  = open("valve_controller_log.txt, "w+")
-
-        f.write("Packet ID = %d   , Timestamp = %d   , Data = %d\r\n", self.packet_type, self.timestamp, self.data)
-
-        f.close()
-
-        pass
+        filename.write("\nPacket ID = {}   , Timestamp = {}   , Data = {}".
+                       format(self.packet_type, self.timestamp, self.data))
 
     def print_to_js(self, filename):
         """ Log packet in json file
@@ -62,3 +57,19 @@ class Packet(object):
         filename -- absolute path to .json log file"""
         # TODO: form a dict from packet and json.dump into 'filename'
         pass
+
+
+# Packets to Transmit #
+class CmdPacket(object):
+    """Base PC to valve controller command packet"""
+    def __init__(self, cmd):
+        self.cmd = cmd
+
+        self.packed_bytes = struct.pack('<B', self.cmd)
+
+
+# Internal Packet Definitions #
+class UsbCommand(object):
+    """Command (from GUI to USB process) to enable/disable serial connection"""
+    def __init__(self, conn):
+        self.conn = conn

@@ -1,3 +1,4 @@
 .idea
 gcs/__pycache__
 venv
+gcs/.vs

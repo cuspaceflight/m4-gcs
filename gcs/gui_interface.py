@@ -13,5 +13,9 @@ def run(usb_pipe, gui_exit):
 
     usb_pipe -- pipe to/from USB process
     gui_exit -- gui exit signal"""
+
+    # For debugging:
+    while True:
+        pass
     gui_exit.set()  # This goes last, signals other processes to end
 
