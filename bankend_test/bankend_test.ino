@@ -25,7 +25,7 @@ void loop() {
   uint8_t buffer_data[8];
 
   for(int i = 0; i <8; i++){
-    buffer_data[i] = (uint8_t)(Data >> i) & 0xFF;
+    buffer_data[i] = (uint8_t)(Data >> 8*i) & 0xFF;
   }
   
   
