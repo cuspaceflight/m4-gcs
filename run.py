@@ -10,6 +10,7 @@ import signal
 import multiprocessing
 import argparse
 
+# Todo: freeze script into executable once done
 
 def run(args):
     """Initialise and run the backend.
