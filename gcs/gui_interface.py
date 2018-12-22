@@ -16,7 +16,9 @@ def run(usb_pipe, gui_exit):
     usb_pipe -- pipe to/from USB process
     gui_exit -- gui exit signal"""
 
-    # For debugging:
+    # For debugging: ######################################################
+
+    # Send 3 example packets then wait to receive some
     time.sleep(1)
     cmd = BankStateCmdPacket(Bank.BANK_A.value, BankState.SAFE.value)
     usb_pipe.send(cmd)
@@ -28,8 +30,8 @@ def run(usb_pipe, gui_exit):
 
     cmd = ConfigCmdPacket(Valve.A_CH1.value, Valve.A_CH2.value, Valve.B_CH4.value, Valve.B_CH5.value, Valve.A_CH5.value)
     usb_pipe.send(cmd)
-    time.sleep(5)
-    # End debugging
+    time.sleep(30)
+    # End debugging: ######################################################
 
     gui_exit.set()  # This goes last, signals other processes to end
 

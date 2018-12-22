@@ -10,10 +10,13 @@ from enum import Enum
 
 
 def fletcher32(bytes_arg):
-    """Source: azbshiri (https://gist.github.com/globby/9337839)"""
+    """Compute Fletcher-32 checksum
+    Based on: azbshiri (https://gist.github.com/globby/9337839)
+
+    bytes_arg -- bytes to perform checksum calculation on"""
     a = struct.unpack("<{}B".format(len(bytes_arg)), bytes_arg)
-    b = [sum(a[:i])%65535 for i in range(len(a)+1)]
-    return ((sum(b)%65535 << 16) | max(b))
+    b = [sum(a[:i]) % 65535 for i in range(len(a)+1)]
+    return (sum(b) % 65535 << 16) | max(b)
 
 
 # Current packet variables:       data_struct : Raw packet data (save just in case it's needed later)
@@ -103,6 +106,9 @@ class Valve(Enum):
         return any(value == item.value for item in cls)
 
 
+# TODO: define ack packets
+
+
 class Packet(object):
     """Base class"""
     def __init__(self, input_struct=bytes(RX_PCKT_SIZE)):
@@ -115,6 +121,8 @@ class Packet(object):
         meta_data = struct.unpack('<BBBBI', self.data_struct[0:PAYLOAD_START])
 
         self.type = meta_data[0]
+        self.valid = PcktTypes.has_value(self.type)
+
         self.timestamp = meta_data[4]
 
         # Fletcher-32 checksum
@@ -122,7 +130,7 @@ class Packet(object):
 
         # Calculate checksum and ensure it matches self.checksum, store result in self.valid bool
         self.checksum_calc = fletcher32(self.data_struct[:PAYLOAD_END])
-        self.valid = (self.checksum_calc == self.checksum)
+        self.valid &= (self.checksum_calc == self.checksum)
 
     def printout(self, textbox):
         """Print packet in the gui
@@ -149,6 +157,7 @@ class Packet(object):
         pass
 
     def print_to_terminal(self):
+        """Print to the terminal, useful for debugging"""
         print("\n\n")
         print("\nType:                {}".format(self.type))
         print("\nTimestamp:           {}".format(self.timestamp))
@@ -168,7 +177,11 @@ class BankStatusPacket(Packet):
         bank_status = struct.unpack('<BBHHH', payload[0:8])
         # Todo: add comments with units for each
         self.bank = bank_status[0]
+        self.valid &= Bank.has_value(self.bank)
+
         self.state = bank_status[1]
+        self.valid &= BankState.has_value(self.state)
+
         self.psu_v = bank_status[2]
         self.firing_v = bank_status[3]
         self.firing_c = bank_status[4]
@@ -176,6 +189,7 @@ class BankStatusPacket(Packet):
     # Todo: override methods from base Packet class (e.g. printout)
     # E.g.:
     def print_to_terminal(self):
+        """Print to the terminal, useful for debugging"""
         Packet.print_to_terminal()
         print("\nBank:           {}".format(self.bank))
         print("\nState:          {}".format(self.state))
@@ -201,6 +215,7 @@ class ChannelStatus(object):
     # Todo: override methods from base Packet class (e.g. printout)
     # E.g.:
     def print_to_terminal(self):
+        """Print to the terminal, useful for debugging"""
         print("\nFiring Voltage: {}".format(self.firing_v))
         print("\nOutput Voltage: {}".format(self.output_v))
         print("\nOutput Current: {}".format(self.output_c))
@@ -216,6 +231,7 @@ class ChannelStatusPacket(Packet):
 
         payload = self.data_struct[PAYLOAD_START:PAYLOAD_END]
         self.bank = struct.unpack('<B', payload[0])  # Todo: check format of bank field
+        self.valid &= Bank.has_value(self.bank)
         self.channel_status = []
         for i in range(0, 5):
             self.channel_status.append(ChannelStatus(payload[i * CHANNEL_STATUS_SIZE:(i + 1) * CHANNEL_STATUS_SIZE]))
@@ -223,58 +239,11 @@ class ChannelStatusPacket(Packet):
     # Todo: override methods from base Packet class (e.g. printout)
     # E.g.:
     def print_to_terminal(self):
+        """Print to the terminal, useful for debugging"""
         print("\nBank: {}".format(self.bank))
         for i in range(0, 5):
             print("\n\nChannel{}".format(i))
             self.channel_status[i].print_to_terminal()
-
-
-# # Event Packets #####################################################################
-# class Event(Enum):
-#     a = 1
-#     # Todo: fill in, ack messages use same ID as command
-#
-#
-# event_list = [ev.value for ev in Event]
-#
-#
-# class EventPacket(object):
-#     def __init__(self, input_struct=bytes(EVENT_PACKET_SIZE)):
-#         """Form packet from incoming USB bytes
-#
-#         input_struct -- incoming packet in raw bytes form"""
-#
-#         self.data_struct = input_struct
-#
-#         data = struct.unpack('<BIBBBB', self.data_struct)
-#
-#         self.id = data[0]
-#         self.timestamp = data[1]
-#
-#         # Fletcher-32 checksum
-#         self.checksum = data[2:6]
-#         # Todo: calculate checksum and ensure it matches self.checksum, store result in self.valid bool
-#
-#     def printout(self, textbox):
-#         """Print packet in the gui
-#
-#         textbox -- PyQt text box to print to"""
-#         # TODO: print packet to a pyqt text box in the gui
-#
-#     def print_to_file(self, filename):
-#         """Log packet in human readable text file
-#
-#         filename -- absolute path to .txt log file"""
-#
-#         # TODO: print packet to text file in readable format
-#         # e.g.: filename.write("\n\n<attribute name>: {}\n".format(self.<attribute>))
-#
-#     def print_to_js(self, filename):
-#         """ Log packet in json file
-#
-#         filename -- absolute path to .json log file"""
-#         # TODO: form a dict from packet and json.dump into 'filename'
-#         pass
 
 
 # Tx Packets ########################################################################
@@ -288,11 +257,14 @@ class CmdPacket(object):
         self.timestamp = int(round(time.time()))
         self.packed_bytes = struct.pack('<B3xIB', PcktTypes.CMD.value, self.timestamp, self.cmd)
         self.checksum = 0
+
     def pack_cmd(self):
+        """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<{}x'.format(115), zeros)  # Remaining payload
         self.calc_checksum()
 
     def calc_checksum(self):
+        """Calculate checksum using packed bytes & append it to the bytes"""
         # Calculate checksum and ensure it matches self.checksum, store result in self.valid bool
         self.checksum = fletcher32(self.packed_bytes)
         self.packed_bytes += struct.pack('<I', self.checksum)  # Checksum
@@ -314,6 +286,7 @@ class BankStateCmdPacket(CmdPacket):
         self.pack_cmd()
 
     def pack_cmd(self):
+        """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<BB', self.bank, self.state)
         self.packed_bytes += struct.pack('<{}x'.format(113))  # Remaining payload
         CmdPacket.calc_checksum(self)
@@ -335,6 +308,7 @@ class ValveStateCmdPacket(CmdPacket):
         self.pack_cmd()
 
     def pack_cmd(self):
+        """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<BB', self.valve, self.state)
         self.packed_bytes += struct.pack('<{}x'.format(113))  # Remaining payload
         CmdPacket.calc_checksum(self)
@@ -365,9 +339,11 @@ class ConfigCmdPacket(CmdPacket):
         self.pack_cmd()
 
     def pack_cmd(self):
+        """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<BBBBB', self.supply_1, self.vent_1, self.supply_2, self.vent_2, self.ignitor)
         self.packed_bytes += struct.pack('<{}x'.format(110))  # Remaining payload
         CmdPacket.calc_checksum(self)
+
 
 # Internal Packet Definitions #######################################################
 class UsbCommand(object):

@@ -21,6 +21,10 @@ MIN_PACKET_SIZE = 1+RX_PCKT_SIZE  # Start byte + min size
 
 
 def serial_write(b, ser):
+    """Add start bit and escape substitutions before transmitting bytes over USB
+
+    b   -- bytes to be modified before transmission
+    ser -- pyserial Serial object"""
     tx_buf = bytearray([START_BYTE]) + bytearray(b)
     for i in range(1, len(tx_buf)):
         if tx_buf[i] == START_BYTE:
@@ -30,7 +34,12 @@ def serial_write(b, ser):
 
     ser.write(tx_buf)
 
+
 def serial_read(ser, serial_buffer):
+    """Handle escape substitutions before passing bytes to packet constructors
+
+    ser           -- pyserial Serial object
+    serial_buffer -- bytearray to store received bytes"""
     counter = 0
     escape = False
     while counter < RX_PCKT_SIZE:
@@ -48,12 +57,13 @@ def serial_read(ser, serial_buffer):
                         rx_byte = START_BYTE
                     elif rx_byte == ESCAPE_BYTE_ESC:
                         rx_byte = ESCAPE_BYTE
-                    escape = False;
+                    escape = False
+
                 serial_buffer[counter] = rx_byte
                 counter += 1
 
     if len(rx_byte) == 0:
-        # Timeout
+        # Error e.g.
         return 1
     else:
         return 0  # Success
@@ -75,8 +85,8 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
     while not gui_exit.is_set():
         # Main loop
         usb_ready.set()
+
         # Send over USB
-        # TODO: add start byte and escape byte
         if gui_pipe.poll():
             # Receive incoming commands from the gui process
             cmd = gui_pipe.recv()
@@ -90,8 +100,10 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
                 elif not cmd.conn and ser.is_open:
                     # Disconnect
                     ser.close()
+
             elif isinstance(cmd, CmdPacket):
                 if ser.is_open:
+                    # Transmit command over USB
                     serial_write(cmd.packed_bytes, ser)
                     if DEBUG:
                         print_bytes = struct.unpack('<{}B'.format(len(cmd.packed_bytes)), cmd.packed_bytes)
@@ -99,7 +111,6 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
                         print("\n")
 
         # Receive over USB
-        # TODO: check whether first byte is within the list of valid packet IDs before receiving the next 127 bytes
         if ser.is_open:
             if ser.in_waiting > 4094:
                 print("USB buffer full!")
@@ -129,6 +140,7 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
                             message = BankStateCmdPacket(serial_buffer)
                         else:
                             message = Packet(serial_buffer)
+
                         if DEBUG:
                             message.print_to_terminal()
 
