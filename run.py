@@ -12,6 +12,7 @@ import argparse
 
 # Todo: freeze script into executable once done
 
+
 def run(args):
     """Initialise and run the backend.
 
@@ -31,21 +32,37 @@ def run(args):
     ############################################################################
     # Define and start processes
     ############################################################################
+    log_ready = multiprocessing.Event()  # Log process ready flag
+    log_ready.clear()
+
+    usb_ready = multiprocessing.Event()  # USB process ready flag
+    usb_ready.clear()
+
     gui_exit = multiprocessing.Event()  # Flag for gui exit
     gui_exit.clear()
 
     print("Starting processes...")
+    # Todo: add ready signal to each process?
+
+    # Start logging process
+    log_process = multiprocessing.Process(target=logging.run, args=(log_usb_pipe, gui_exit, log_ready, "../logs"))
+    log_process.start()
+
+    while not log_ready.is_set():
+        # Wait for logging process to finish starting up
+        time.sleep(0.1)
+
+    # Start usb parsing process
+    usb_process = multiprocessing.Process(target=usb.run, args=(args.port, usb_gui_pipe, usb_log_pipe, gui_exit, usb_ready))
+    usb_process.start()
+
+    while not usb_ready.is_set():
+        # Wait for USB process to finish starting up
+        time.sleep(0.1)
+
     # Start gui/main process
     gui_process = multiprocessing.Process(target=gui_interface.run, args=(gui_usb_pipe, gui_exit))
     gui_process.start()
-
-    # Start logging process
-    log_process = multiprocessing.Process(target=logging.run, args=(log_usb_pipe, gui_exit, "../logs"))
-    log_process.start()
-
-    # Start usb parsing process
-    usb_process = multiprocessing.Process(target=usb.run, args=(args.port, usb_gui_pipe, usb_log_pipe, gui_exit))
-    usb_process.start()
 
     print("Running...")
     gui_process.join()

@@ -10,7 +10,7 @@ script_dir = os.path.dirname(__file__)
 #     - Saves information to log files as the program runs
 
 
-def run(usb_pipe, gui_exit, log_dir):
+def run(usb_pipe, gui_exit, log_ready, log_dir):
     """Main loop for logging process
 
     usb_pipe -- pipe to/from USB process
@@ -22,6 +22,7 @@ def run(usb_pipe, gui_exit, log_dir):
     with open(txt_log_filepath, 'a+') as f_txt, open(json_log_filepath, 'a+') as f_json:
         while not gui_exit.is_set():
             # Main loop
+            log_ready.set()
             if usb_pipe.poll(0.01):
                 new_packet = usb_pipe.recv()
                 new_packet.print_to_file(f_txt)
