@@ -60,4 +60,4 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Fancy Valve"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Diagram"))
 
-from AB_widget import AB_widget
+from .AB_widget import AB_widget

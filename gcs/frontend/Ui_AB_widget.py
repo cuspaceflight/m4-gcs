@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/AB_widget.ui'
+# Form implementation generated from reading ui file 'ui/Ui_AB_widget.ui'
 #
 # Created by: PyQt5 UI code generator 5.11.3
 #
@@ -63,4 +63,4 @@ class Ui_AB_widget(object):
         self.label_2.setText(_translate("AB_widget", "A/B"))
         self.pushButton_2.setText(_translate("AB_widget", "Button"))
 
-from channel_widget import channel_widget
+from .channel_widget import channel_widget
