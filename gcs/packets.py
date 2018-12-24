@@ -126,7 +126,8 @@ class Packet(object):
         self.timestamp = meta_data[4]
 
         # Fletcher-32 checksum
-        self.checksum = struct.unpack('<I', self.data_struct[PAYLOAD_END:RX_PCKT_SIZE])
+        c_sum = struct.unpack('<I', self.data_struct[PAYLOAD_END:RX_PCKT_SIZE])
+        self.checksum = c_sum[0]
 
         # Calculate checksum and ensure it matches self.checksum, store result in self.valid bool
         self.checksum_calc = fletcher32(self.data_struct[:PAYLOAD_END])

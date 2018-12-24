@@ -4,10 +4,9 @@ CUSF 2018/19
 """
 
 import serial
-import time
 from .packets import *
 
-DEBUG = True
+DEBUG = False
 START_BYTE = 0x7E
 # Escape all 0x7E and 0x7D to 0x7D 0x5E and 0x7D 0x5D
 ESCAPE_BYTE = 0x7D
@@ -27,9 +26,9 @@ def serial_write(b, ser):
     ser -- pyserial Serial object"""
     tx_buf = bytearray([START_BYTE]) + bytearray(b)
     for i in range(1, len(tx_buf)):
-        if tx_buf[i] == START_BYTE:
+        if tx_buf[i] == bytearray([START_BYTE]):
             tx_buf[i:i+1] = bytearray([ESCAPE_BYTE, ESCAPE_BYTE_START])
-        elif tx_buf[i] == ESCAPE_BYTE:
+        elif tx_buf[i] == bytearray([ESCAPE_BYTE]):
             tx_buf[i:i+1] = bytearray([ESCAPE_BYTE, ESCAPE_BYTE_ESC])
 
     ser.write(tx_buf)
@@ -42,24 +41,25 @@ def serial_read(ser, serial_buffer):
     serial_buffer -- bytearray to store received bytes"""
     counter = 0
     escape = False
+    rx_byte = bytearray()
     while counter < RX_PCKT_SIZE:
         rx_byte = ser.read()
         if len(rx_byte) == 0:
             # Timeout
             break
         else:
-            if rx_byte == ESCAPE_BYTE:
+            if rx_byte == bytearray([ESCAPE_BYTE]):
                 escape = True
                 continue
             else:
                 if escape:
-                    if rx_byte == ESCAPE_BYTE_START:
-                        rx_byte = START_BYTE
-                    elif rx_byte == ESCAPE_BYTE_ESC:
-                        rx_byte = ESCAPE_BYTE
+                    if rx_byte == bytearray([ESCAPE_BYTE_START]):
+                        rx_byte = bytearray([START_BYTE])
+                    elif rx_byte == bytearray([ESCAPE_BYTE_ESC]):
+                        rx_byte = bytearray([ESCAPE_BYTE])
                     escape = False
 
-                serial_buffer[counter] = rx_byte
+                serial_buffer += rx_byte
                 counter += 1
 
     if len(rx_byte) == 0:
@@ -67,6 +67,7 @@ def serial_read(ser, serial_buffer):
         return 1
     else:
         return 0  # Success
+
 
 def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
     """Main USB process function
@@ -78,8 +79,7 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
         """
 
     # initialise serial port
-    ser = serial.Serial(port=port, baudrate=9600, write_timeout=0, timeout=0.05)  # Open serial port
-    time.sleep(3)
+    ser = serial.Serial(port=port, baudrate=115200, write_timeout=0, timeout=0.05)  # Open serial port
 
     # continuously poll port for packets
     while not gui_exit.is_set():
@@ -114,10 +114,10 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
         if ser.is_open:
             if ser.in_waiting > 4094:
                 print("USB buffer full!")
-            elif ser.in_waiting > 0:
+            if ser.in_waiting > 0:
                 # Assumes baudrate is high enough to prevent timeout
                 rx_byte = 0
-                while rx_byte != START_BYTE:
+                while rx_byte != bytearray([START_BYTE]):
                     rx_byte = ser.read()
                     if len(rx_byte) == 0:
                         # Timeout
@@ -127,7 +127,7 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
                     break
                 else:
 
-                    serial_buffer = bytearray(RX_PCKT_SIZE)
+                    serial_buffer = bytearray()
                     read_res = serial_read(ser, serial_buffer)
 
                     if read_res == 1:
@@ -147,8 +147,8 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
                         if gui_exit.is_set():
                             break  # End process
                         else:
-                            log_pipe.send(message)
-                            gui_pipe.send(message)
+                           log_pipe.send(message)
+                        #   gui_pipe.send(message)
 
         else:
             time.sleep(0.1)

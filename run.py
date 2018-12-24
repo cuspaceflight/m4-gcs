@@ -75,15 +75,16 @@ def run(args):
     time.sleep(0.2)
 
 
-signal.signal(signal.SIGINT, signal.SIG_DFL)  # Exit on Ctrl-C
+if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal.SIG_DFL)  # Exit on Ctrl-C
 
-# Process arguments
-parser = argparse.ArgumentParser(description=
-                                 """Martlet IV Ground Control Software.
-                                 Connect to Firing Controller on given serial port (default /dev/ttyACM0)""")
-parser.add_argument('--port', dest='port', type=str, nargs='?',
-                    default='/dev/ttyACM0', help='Serial port to use')
+    # Process arguments
+    parser = argparse.ArgumentParser(description=
+                                     """Martlet IV Ground Control Software.
+                                     Connect to Firing Controller on given serial port (default '/dev/ttyACM0')""")
+    parser.add_argument('-p', dest='port', type=str, nargs='?',
+                        default='/dev/ttyACM0', help='Serial port to use')
 
-run(parser.parse_args())
+    run(parser.parse_args())
 
 
