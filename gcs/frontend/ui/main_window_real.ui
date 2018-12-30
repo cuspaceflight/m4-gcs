@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>813</width>
-    <height>709</height>
+    <width>1647</width>
+    <height>819</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Valve Controller</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -24,23 +24,20 @@
        <attribute name="title">
         <string>Channels</string>
        </attribute>
-       <widget class="QWidget" name="">
+       <widget class="QSplitter" name="splitter">
         <property name="geometry">
          <rect>
-          <x>10</x>
+          <x>0</x>
           <y>10</y>
-          <width>771</width>
-          <height>591</height>
+          <width>1601</width>
+          <height>621</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <widget class="AB_widget" name="widget" native="true"/>
-         </item>
-         <item>
-          <widget class="AB_widget" name="widget_2" native="true"/>
-         </item>
-        </layout>
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <widget class="A_widget" name="widget" native="true"/>
+        <widget class="B_widget" name="widget_2" native="true"/>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_2">
@@ -62,7 +59,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>813</width>
+     <width>1647</width>
      <height>25</height>
     </rect>
    </property>
@@ -71,9 +68,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>AB_widget</class>
+   <class>A_widget</class>
    <extends>QWidget</extends>
-   <header>.AB_widget</header>
+   <header>.A_widget</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>B_widget</class>
+   <extends>QWidget</extends>
+   <header>.B_widget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
