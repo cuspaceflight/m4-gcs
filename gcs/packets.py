@@ -7,6 +7,7 @@ import json
 import struct
 import time
 from enum import Enum
+from PyQt5 import QtCore, QtGui
 
 
 def fletcher32(bytes_arg):
@@ -18,23 +19,13 @@ def fletcher32(bytes_arg):
     b = [sum(a[:i]) % 65535 for i in range(len(a)+1)]
     return (sum(b) % 65535 << 16) | max(b)
 
-
-# Current packet variables:       data_struct : Raw packet data (save just in case it's needed later)
-#                                 packet_type : What data is contained in packet
-#                                 timestamp   : When the data was received
-#                                 data        : actual data contained.
-# Input data structure: 128 bytes, of which the first 8 bytes are meta data.
-# Meta data structure : Byte 0   : packet_type
-#                       Byte 1-3 : RESERVED
-#                       Byte 4-7 : timestamp
-
 # RX Packets ########################################################################
 # Constants:
 # TODO:check constants
 RX_PCKT_SIZE = 128
 PAYLOAD_START = 8
 PAYLOAD_END = RX_PCKT_SIZE - 4
-CHANNEL_STATUS_SIZE = 8
+CHANNEL_STATUS_SIZE = 14
 
 
 class PcktTypes(Enum):
@@ -50,7 +41,7 @@ class PcktTypes(Enum):
 class Cmd(Enum):
     BANK_STATE = 0xF0
     VALVE_STATE = 0xF1
-    UPDATE_CONFIG = 0xF2
+    #UPDATE_CONFIG = 0xF2
 
     @classmethod
     def has_value(cls, value):
@@ -92,7 +83,7 @@ class Valve(Enum):
     A_CH3 = 0xA3
     A_CH4 = 0xA4
     A_CH5 = 0xA5
-    MAIN_VALVE = 0xA6
+    #MAIN_VALVE = 0xA6
 
     B_CH1 = 0xB1
     B_CH2 = 0xB2
@@ -108,7 +99,15 @@ class Valve(Enum):
 
 # TODO: define ack packets
 
-
+# Current packet variables:       data_struct : Raw packet data (save just in case it's needed later)
+#                                 packet_type : What data is contained in packet
+#                                 timestamp   : When the data was received
+#                                 checksum    : Received checksum
+#                                 csum_calc   : Calculated checksum
+# Input data structure: 128 bytes, of which the first 8 bytes are meta data.
+# Meta data structure : Byte 0   : packet_type
+#                       Byte 1-3 : RESERVED
+#                       Byte 4-7 : timestamp
 class Packet(object):
     """Base class"""
     def __init__(self, input_struct=bytes(RX_PCKT_SIZE)):
@@ -130,40 +129,46 @@ class Packet(object):
         self.checksum = c_sum[0]
 
         # Calculate checksum and ensure it matches self.checksum, store result in self.valid bool
-        self.checksum_calc = fletcher32(self.data_struct[:PAYLOAD_END])
-        self.valid &= (self.checksum_calc == self.checksum)
+        self.csum_calc = fletcher32(self.data_struct[:PAYLOAD_END])
+        self.valid &= (self.csum_calc == self.checksum)
+
+    def print_with(self, print_func):
+        """Print packet using provided function
+
+        print_func -- function to use to print"""
+        print_func("## RX ##")
+        print_func("ID:                  {}\n".format(self.type))
+        print_func("Timestamp:           {}\n".format(self.timestamp))
+        print_func("Received checksum:   {}\n".format(self.checksum))
+        print_func("Calculated checksum: {}\n".format(self.checksum))
+        print_func("Valid:               {}\n".format(self.checksum))
 
     def printout(self, textbox):
         """Print packet in the gui
 
         textbox -- PyQt text box to print to"""
-        # TODO: print packet to a pyqt text box in the gui
+        textbox.moveCursor(QtGui.QTextCursor.End)
+        textbox.ensureCursorVisible()
+        self.print_with(textbox.insertPlainText)
+        textbox.insertPlainText("\n\n")
 
     def print_to_file(self, filename):
         """Log packet in human readable text file
 
         filename -- absolute path to .txt log file"""
-
-        # TODO: print packet to text file in readable format
-        # e.g.: filename.write("\n\n<attribute name>: {}\n".format(self.<attribute>))
-
-        filename.write("\nPacket ID = {}   , Timestamp = {}".
-                       format(self.type, self.timestamp))
+        self.print_with(filename.write)
+        filename.write("\n\n")
 
     def print_to_js(self, filename):
         """ Log packet in json file
 
         filename -- absolute path to .json log file"""
-        # TODO: form a dict from packet and json.dump into 'filename'
-        pass
+        json.dump(self.__dict__, filename)
 
     def print_to_terminal(self):
         """Print to the terminal, useful for debugging"""
+        self.print_with(print)
         print("\n\n")
-        print("\nType:                {}".format(self.type))
-        print("\nTimestamp:           {}".format(self.timestamp))
-        print("\nReceived checksum:   {}".format(self.checksum))
-        print("\nCalculated checksum: {}".format(self.checksum_calc))
 
 
 class BankStatusPacket(Packet):
@@ -175,7 +180,7 @@ class BankStatusPacket(Packet):
 
         payload = self.data_struct[PAYLOAD_START:PAYLOAD_END]
 
-        bank_status = struct.unpack('<BBHHH', payload[0:8])
+        bank_status = struct.unpack('<BBffff', payload[0:18])
         # Todo: add comments with units for each
         self.bank = bank_status[0]
         self.valid &= Bank.has_value(self.bank)
@@ -183,20 +188,22 @@ class BankStatusPacket(Packet):
         self.state = bank_status[1]
         self.valid &= BankState.has_value(self.state)
 
-        self.psu_v = bank_status[2]
-        self.firing_v = bank_status[3]
-        self.firing_c = bank_status[4]
+        self.mcu_temp = bank_status[2]
+        self.psu_v = bank_status[3]
+        self.firing_v = bank_status[4]
+        self.firing_c = bank_status[5]
 
-    # Todo: override methods from base Packet class (e.g. printout)
-    # E.g.:
-    def print_to_terminal(self):
-        """Print to the terminal, useful for debugging"""
-        Packet.print_to_terminal()
-        print("\nBank:           {}".format(self.bank))
-        print("\nState:          {}".format(self.state))
-        print("\nPSU Voltage:    {}".format(self.psu_v))
-        print("\nFiring Voltage: {}".format(self.firing_v))
-        print("\nFiring Current: {}".format(self.firing_c))
+    def print_with(self, print_func):
+        """Print with supplied function
+
+        print_func -- print function to use"""
+        Packet.print_with(print_func)
+        print_func("Bank:                {}\n".format(self.bank))
+        print_func("State:               {}\n".format(self.state))
+        print_func("MCU Temp:            {}\n".format(self.mcu_temp))
+        print_func("PSU Voltage:         {}\n".format(self.psu_v))
+        print_func("Firing Voltage:      {}\n".format(self.firing_v))
+        print_func("Firing Current:      {}\n".format(self.firing_c))
 
 
 class ChannelStatus(object):
@@ -206,21 +213,39 @@ class ChannelStatus(object):
         """Unpack incoming bytes
 
         input_struct -- incoming bytes to be unpacked"""
-        channel_status = struct.unpack('<HHHH', input_struct)  # Todo: check format of each field
+        channel_status = struct.unpack('<BfffB', input_struct)
         # Todo: add comments with units for each
-        self.firing_v = channel_status[0]
-        self.output_v = channel_status[1]
-        self.output_c = channel_status[2]
-        self.resistance = channel_status[3]
+        self.state = channel_status[0]
+        self.firing_v = channel_status[1]
+        self.output_v = channel_status[2]
+        self.output_c = channel_status[3]
+        self.continuity = channel_status[4]
 
-    # Todo: override methods from base Packet class (e.g. printout)
-    # E.g.:
+    def print_with(self, print_func):
+        print_func("Firing Voltage:      {}\n".format(self.firing_v))
+        print_func("Output Voltage:      {}\n".format(self.output_v))
+        print_func("Output Current:      {}\n".format(self.output_c))
+        print_func("Continuity:          {}\n".format(self.continuity))
+
+    def printout(self, textbox):
+        """Print packet in the gui
+
+        textbox -- PyQt text box to print into"""
+        self.print_with(textbox.insertPlainText)
+        #textbox.insertPlainText("\n\n")
+
+    def print_to_file(self, filename):
+        """Log packet in human readable text file
+
+        filename -- absolute path to .txt log file"""
+
+        self.print_with(filename.write)
+        #filename.write("\n\n")
+
     def print_to_terminal(self):
         """Print to the terminal, useful for debugging"""
-        print("\nFiring Voltage: {}".format(self.firing_v))
-        print("\nOutput Voltage: {}".format(self.output_v))
-        print("\nOutput Current: {}".format(self.output_c))
-        print("\nResistance:     {}".format(self.resistance))
+        self.print_with(print)
+        #print("\n\n")
 
 
 class ChannelStatusPacket(Packet):
@@ -231,44 +256,82 @@ class ChannelStatusPacket(Packet):
         Packet.__init__(self, input_struct)
 
         payload = self.data_struct[PAYLOAD_START:PAYLOAD_END]
-        self.bank = struct.unpack('<B', payload[0])  # Todo: check format of bank field
+        self.bank = struct.unpack('<B', payload[0])
         self.valid &= Bank.has_value(self.bank)
         self.channel_status = []
         for i in range(0, 5):
             self.channel_status.append(ChannelStatus(payload[i * CHANNEL_STATUS_SIZE:(i + 1) * CHANNEL_STATUS_SIZE]))
 
-    # Todo: override methods from base Packet class (e.g. printout)
-    # E.g.:
-    def print_to_terminal(self):
-        """Print to the terminal, useful for debugging"""
-        print("\nBank: {}".format(self.bank))
+    def print_with(self, print_func):
+        """Print with supplied function
+
+        print_func -- print function to use"""
+        Packet.print_with(print_func)
+        print_func("Bank:                {}\n".format(self.bank))
         for i in range(0, 5):
-            print("\n\nChannel{}".format(i))
-            self.channel_status[i].print_to_terminal()
+            self.channel_status[i].print_with(print_func)
 
 
 # Tx Packets ########################################################################
+
 
 class CmdPacket(object):
     """Base PC to valve controller command packet"""
     def __init__(self, cmd):
         if not Cmd.has_value(cmd):
             raise ValueError("Invalid command ID")
+        self.type = PcktTypes.CMD.value
         self.cmd = cmd
         self.timestamp = int(round(time.time()))
-        self.packed_bytes = struct.pack('<B3xIB', PcktTypes.CMD.value, self.timestamp, self.cmd)
-        self.checksum = 0
+        self.packed_bytes = struct.pack('<B3xIB', self.type, self.timestamp, self.cmd)
+        self.checksum = None
+        self.num_padding = 115
 
     def pack_cmd(self):
         """Pack fields into byte form for transmission over USB"""
-        self.packed_bytes += struct.pack('<{}x'.format(115), zeros)  # Remaining payload
-        self.calc_checksum()
+        self.packed_bytes += struct.pack('<{}x'.format(self.num_padding))  # Remaining payload
+        self.checksum = fletcher32(self.packed_bytes)
+        self.pack_checksum(self)
 
-    def calc_checksum(self):
+    def pack_checksum(self):
         """Calculate checksum using packed bytes & append it to the bytes"""
         # Calculate checksum and ensure it matches self.checksum, store result in self.valid bool
         self.checksum = fletcher32(self.packed_bytes)
-        self.packed_bytes += struct.pack('<I', self.checksum)  # Checksum
+        self.packed_bytes += struct.pack('<I', self.checksum)
+
+    def print_with(self, print_func):
+        print_func("## TX ##")
+        print_func("ID:                  {}\n".format(self.type))
+        print_func("Timestamp:           {}\n".format(self.timestamp))
+        print_func("Command:             {}\n".format(self.cmd))
+        print_func("Checksum:            {}\n".format(self.checksum))
+
+    def printout(self, textbox):
+        """Print packet in the gui
+
+        textbox -- PyQt text box to print to"""
+        textbox.moveCursor(QtGui.QTextCursor.End)
+        textbox.ensureCursorVisible()
+        self.print_with(textbox.insertPlainText)
+        textbox.insertPlainText("\n\n")
+
+    def print_to_file(self, filename):
+        """Log packet in human readable text file
+
+        filename -- absolute path to .txt log file"""
+        self.print_with(filename.write)
+        filename.write("\n\n")
+
+    def print_to_js(self, filename):
+        """ Log packet in json file
+
+        filename -- absolute path to .json log file"""
+        json.dump(self.__dict__, filename)
+
+    def print_to_terminal(self):
+        """Print to the terminal, useful for debugging"""
+        self.print_with(print)
+        print("\n\n")
 
 
 class BankStateCmdPacket(CmdPacket):
@@ -283,14 +346,20 @@ class BankStateCmdPacket(CmdPacket):
 
         self.bank = bank
         self.state = state
+        self.num_padding -= 2
 
-        self.pack_cmd()
+        self.pack_cmd(self)
 
     def pack_cmd(self):
         """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<BB', self.bank, self.state)
-        self.packed_bytes += struct.pack('<{}x'.format(113))  # Remaining payload
-        CmdPacket.calc_checksum(self)
+        self.packed_bytes += struct.pack('<{}x'.format(self.num_padding))  # Remaining payload
+        self.pack_checksum(self)
+
+    def print_with(self, print_func):
+        CmdPacket.print_with(print_func)
+        print_func("Bank:                {}\n".format(self.bank))
+        print_func("State:               {}\n".format(self.state))
 
 
 class ValveStateCmdPacket(CmdPacket):
@@ -305,48 +374,25 @@ class ValveStateCmdPacket(CmdPacket):
 
         self.valve = valve
         self.state = state
+        self.num_padding -= 2
 
-        self.pack_cmd()
+        self.pack_cmd(self)
 
     def pack_cmd(self):
         """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<BB', self.valve, self.state)
-        self.packed_bytes += struct.pack('<{}x'.format(113))  # Remaining payload
-        CmdPacket.calc_checksum(self)
+        self.packed_bytes += struct.pack('<{}x'.format(self.num_padding))  # Remaining payload
+        self.pack_checksum(self)
 
-
-class ConfigCmdPacket(CmdPacket):
-    """Command to set valve-channel mapping config"""
-    def __init__(self, supply_1, vent_1, supply_2, vent_2, ignitor):
-        CmdPacket.__init__(self, Cmd.UPDATE_CONFIG.value)
-
-        if not Valve.has_value(supply_1):
-            raise ValueError("Invalid supply_1 valve ID")
-        if not Valve.has_value(vent_1):
-            raise ValueError("Invalid vent_1 valve ID")
-        if not Valve.has_value(supply_2):
-            raise ValueError("Invalid supply_2 valve ID")
-        if not Valve.has_value(vent_2):
-            raise ValueError("Invalid vent_2 valve ID")
-        if not Valve.has_value(ignitor):
-            raise ValueError("Invalid ignitor valve ID")
-
-        self.supply_1 = supply_1
-        self.vent_1 = vent_1
-        self.supply_2 = supply_2
-        self.vent_2 = vent_2
-        self.ignitor = ignitor
-
-        self.pack_cmd()
-
-    def pack_cmd(self):
-        """Pack fields into byte form for transmission over USB"""
-        self.packed_bytes += struct.pack('<BBBBB', self.supply_1, self.vent_1, self.supply_2, self.vent_2, self.ignitor)
-        self.packed_bytes += struct.pack('<{}x'.format(110))  # Remaining payload
-        CmdPacket.calc_checksum(self)
+    def print_with(self, print_func):
+        CmdPacket.print_with(print_func)
+        print_func("Valve:               {}\n".format(self.valve))
+        print_func("State:               {}\n".format(self.state))
 
 
 # Internal Packet Definitions #######################################################
+
+
 class UsbCommand(object):
     """Command (from GUI to USB process) to enable/disable serial connection"""
     def __init__(self, conn):

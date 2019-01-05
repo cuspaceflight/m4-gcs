@@ -105,6 +105,7 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
                 if ser.is_open:
                     # Transmit command over USB
                     serial_write(cmd.packed_bytes, ser)
+                    log_pipe.send(cmd)
                     if DEBUG:
                         print_bytes = struct.unpack('<{}B'.format(len(cmd.packed_bytes)), cmd.packed_bytes)
                         print([hex(i) for i in print_bytes])
