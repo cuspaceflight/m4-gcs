@@ -44,6 +44,10 @@ def run(args):
     print("Starting processes...")
     # Todo: add ready signal to each process?
 
+    # Start gui/main process
+    gui_process = multiprocessing.Process(target=gui_interface.run, args=(gui_usb_pipe, gui_exit))
+    gui_process.start()
+
     # Start logging process
     log_process = multiprocessing.Process(target=logging.run, args=(log_usb_pipe, gui_exit, log_ready, "../logs"))
     log_process.start()
@@ -60,9 +64,9 @@ def run(args):
         # Wait for USB process to finish starting up
         time.sleep(0.1)
 
-    # Start gui/main process
-    gui_process = multiprocessing.Process(target=gui_interface.run, args=(gui_usb_pipe, gui_exit))
-    gui_process.start()
+    # # Start gui/main process
+    # gui_process = multiprocessing.Process(target=gui_interface.run, args=(gui_usb_pipe, gui_exit))
+    # gui_process.start()
 
     print("Running...")
     gui_process.join()
