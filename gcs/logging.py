@@ -32,7 +32,7 @@ def run(usb_pipe, gui_exit, log_ready, log_dir):
 
     os.makedirs(os.path.abspath(os.path.join(script_dir, log_dir)), exist_ok=True)
     txt_log_filepath = os.path.abspath(os.path.join(script_dir, log_dir, "txt_log.txt"))
-    json_log_filepath = os.path.abspath(os.path.join(script_dir, log_dir, "json_log.txt"))
+    json_log_filepath = os.path.abspath(os.path.join(script_dir, log_dir, "json_log.json"))
 
     with open(txt_log_filepath, 'a+') as f_txt, open(json_log_filepath, 'a+') as f_json:
         log_ready.set()
@@ -41,7 +41,7 @@ def run(usb_pipe, gui_exit, log_ready, log_dir):
             try:
                 new_packet = q.get(timeout=0.1)
                 new_packet.print_to_file(f_txt)
-                new_packet.print_to_js(f_json)
+                #new_packet.print_to_js(f_json)
             except queue.Empty:
                 pass
 

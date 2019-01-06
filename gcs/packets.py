@@ -136,7 +136,7 @@ class Packet(object):
         """Print packet using provided function
 
         print_func -- function to use to print"""
-        print_func("## RX ##")
+        print_func("## RX ##\n")
         print_func("ID:                  {}\n".format(self.type))
         print_func("Timestamp:           {}\n".format(self.timestamp))
         print_func("Received checksum:   {}\n".format(self.checksum))
@@ -149,14 +149,14 @@ class Packet(object):
         textbox -- PyQt text box to print to"""
         textbox.moveCursor(QtGui.QTextCursor.End)
         textbox.ensureCursorVisible()
-        self.print_with(self, textbox.insertPlainText)
+        self.print_with(textbox.insertPlainText)
         textbox.insertPlainText("\n\n")
 
     def print_to_file(self, filename):
         """Log packet in human readable text file
 
         filename -- absolute path to .txt log file"""
-        self.print_with(self, filename.write)
+        self.print_with(filename.write)
         filename.write("\n\n")
 
     def print_to_js(self, filename):
@@ -327,7 +327,10 @@ class CmdPacket(object):
         """ Log packet in json file
 
         filename -- absolute path to .json log file"""
-        json.dump(self.__dict__, filename)
+        buffer = self.packed_bytes
+        self.packed_bytes = None
+        json.dump(self.__dict__, filename)  # Can't dump bytes
+        self.packed_bytes = buffer
 
     def print_to_terminal(self):
         """Print to the terminal, useful for debugging"""
