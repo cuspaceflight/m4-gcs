@@ -149,21 +149,24 @@ class Packet(object):
         textbox -- PyQt text box to print to"""
         textbox.moveCursor(QtGui.QTextCursor.End)
         textbox.ensureCursorVisible()
-        self.print_with(textbox.insertPlainText)
+        self.print_with(self, textbox.insertPlainText)
         textbox.insertPlainText("\n\n")
 
     def print_to_file(self, filename):
         """Log packet in human readable text file
 
         filename -- absolute path to .txt log file"""
-        self.print_with(filename.write)
+        self.print_with(self, filename.write)
         filename.write("\n\n")
 
     def print_to_js(self, filename):
         """ Log packet in json file
 
         filename -- absolute path to .json log file"""
-        json.dump(self.__dict__, filename)
+        buffer = self.data_struct
+        self.data_struct = None
+        json.dump(self.__dict__, filename)  # Can't dump bytearray
+        self.data_struct = buffer
 
     def print_to_terminal(self):
         """Print to the terminal, useful for debugging"""
@@ -197,7 +200,7 @@ class BankStatusPacket(Packet):
         """Print with supplied function
 
         print_func -- print function to use"""
-        Packet.print_with(print_func)
+        super(BankStatusPacket, self).print_with(print_func)
         print_func("Bank:                {}\n".format(self.bank))
         print_func("State:               {}\n".format(self.state))
         print_func("MCU Temp:            {}\n".format(self.mcu_temp))
@@ -222,17 +225,16 @@ class ChannelStatus(object):
         self.continuity = channel_status[4]
 
     def print_with(self, print_func):
-        print_func("Firing Voltage:      {}\n".format(self.firing_v))
-        print_func("Output Voltage:      {}\n".format(self.output_v))
-        print_func("Output Current:      {}\n".format(self.output_c))
-        print_func("Continuity:          {}\n".format(self.continuity))
+        print_func("    Firing Voltage:      {}\n".format(self.firing_v))
+        print_func("    Output Voltage:      {}\n".format(self.output_v))
+        print_func("    Output Current:      {}\n".format(self.output_c))
+        print_func("    Continuity:          {}\n\n".format(self.continuity))
 
     def printout(self, textbox):
         """Print packet in the gui
 
         textbox -- PyQt text box to print into"""
         self.print_with(textbox.insertPlainText)
-        #textbox.insertPlainText("\n\n")
 
     def print_to_file(self, filename):
         """Log packet in human readable text file
@@ -240,12 +242,10 @@ class ChannelStatus(object):
         filename -- absolute path to .txt log file"""
 
         self.print_with(filename.write)
-        #filename.write("\n\n")
 
     def print_to_terminal(self):
         """Print to the terminal, useful for debugging"""
         self.print_with(print)
-        #print("\n\n")
 
 
 class ChannelStatusPacket(Packet):
@@ -256,7 +256,7 @@ class ChannelStatusPacket(Packet):
         Packet.__init__(self, input_struct)
 
         payload = self.data_struct[PAYLOAD_START:PAYLOAD_END]
-        self.bank = struct.unpack('<B', payload[0])
+        self.bank = struct.unpack('<B', payload[0:1])[0]
         self.valid &= Bank.has_value(self.bank)
         self.channel_status = []
         for i in range(0, 5):
@@ -266,9 +266,10 @@ class ChannelStatusPacket(Packet):
         """Print with supplied function
 
         print_func -- print function to use"""
-        Packet.print_with(print_func)
+        super(ChannelStatusPacket, self).print_with(print_func)
         print_func("Bank:                {}\n".format(self.bank))
         for i in range(0, 5):
+            print_func("    Channel {}\n".format(i+1))
             self.channel_status[i].print_with(print_func)
 
 
@@ -319,7 +320,7 @@ class CmdPacket(object):
         """Log packet in human readable text file
 
         filename -- absolute path to .txt log file"""
-        self.print_with(filename.write)
+        self.print_with(self, filename.write)
         filename.write("\n\n")
 
     def print_to_js(self, filename):
@@ -330,7 +331,7 @@ class CmdPacket(object):
 
     def print_to_terminal(self):
         """Print to the terminal, useful for debugging"""
-        self.print_with(print)
+        self.print_with(self, print)
         print("\n\n")
 
 
@@ -357,7 +358,7 @@ class BankStateCmdPacket(CmdPacket):
         self.pack_checksum(self)
 
     def print_with(self, print_func):
-        CmdPacket.print_with(print_func)
+        super(BankStateCmdPacket, self).print_with(print_func)
         print_func("Bank:                {}\n".format(self.bank))
         print_func("State:               {}\n".format(self.state))
 
@@ -385,7 +386,7 @@ class ValveStateCmdPacket(CmdPacket):
         self.pack_checksum(self)
 
     def print_with(self, print_func):
-        CmdPacket.print_with(print_func)
+        super(ValveStateCmdPacket, self).print_with(print_func)
         print_func("Valve:               {}\n".format(self.valve))
         print_func("State:               {}\n".format(self.state))
 

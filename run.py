@@ -57,7 +57,8 @@ def run(args):
         time.sleep(0.1)
 
     # Start usb parsing process
-    usb_process = multiprocessing.Process(target=usb.run, args=(args.port, usb_gui_pipe, usb_log_pipe, gui_exit, usb_ready))
+    usb_process = multiprocessing.Process(target=usb.run,
+                                          args=(args.port, usb_gui_pipe, usb_log_pipe, gui_exit, usb_ready))
     usb_process.start()
 
     while not usb_ready.is_set():

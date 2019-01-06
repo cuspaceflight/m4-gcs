@@ -29,30 +29,34 @@ except AttributeError:
 class MainThd(QThread):
     new_pckt_sig = pyqtSignal(Packet)
 
-    def __init__(self, window_pipe, usb_pipe):
+    def __init__(self, window_in_q, usb_in_q, usb_out_q):
         QThread.__init__(self)
-        self.window_pipe = window_pipe
-        self.usb_pipe = usb_pipe
+        self.window_in_q = window_in_q
+        self.usb_in_q = usb_in_q
+        self.usb_out_q = usb_out_q
 
     def __del__(self):
         self.wait()
 
     def run(self):
         while True:
-            if self.usb_pipe.poll(0.01):
-                new_packet_usb = self.usb_pipe.recv()
+            try:
+                new_packet_usb = self.usb_in_q.get(timeout=0.01)
                 self.new_pckt_sig.emit(new_packet_usb)
+            except queue.Empty:
+                pass
 
-            if self.window_pipe.poll(0.01):
-                new_packet_window = self.window_pipe.recv()
+            try:
+                new_packet_window = self.window_in_q.get(timeout=0.01)
+                if isinstance(new_packet_window, UsbCommand):
+                    self.usb_out_q.put(new_packet_window)
+            except queue.Empty:
+                pass
 
-                if isinstance(new_packet_window, Usb_command):
-                    self.usb_pipe.send(new_packet_window)
 
-
-class gcs_main_window(QMainWindow, Ui_MainWindow):
+class GcsMainWindow(QMainWindow, Ui_MainWindow):
     """Inherit main window generated in QT5 Creator"""
-    def __init__(self, usb_pipe, parent=None):
+    def __init__(self, usb_in_q, usb_out_q, parent=None):
 
         super().__init__(parent)
         self.setupUi(self)
@@ -60,9 +64,8 @@ class gcs_main_window(QMainWindow, Ui_MainWindow):
         # Add slots and signals manually
 
         # Start update thread
-        thread_end,self.gui_end = Pipe(duplex=False)  # So that QThread and gui don't use same pipe end at same time
-        self.update_thread = MainThd(thread_end, usb_pipe)
-        #self.connect(self.update_thread, SIGNAL("new_packet(PyQt_PyObject)"),self.new_packet)
+        window_out_q = queue.Queue()  # For communication between gui and QThread
+        self.update_thread = MainThd(window_out_q, usb_in_q, usb_out_q)
         self.update_thread.new_pckt_sig.connect(self.new_packet)
         self.update_thread.start(QThread.LowPriority)
 
@@ -76,12 +79,20 @@ class gcs_main_window(QMainWindow, Ui_MainWindow):
 #     - Once this works, can look into other technologies e.g. React JS
 
 
-def produce(usb_pipe, gui_exit, q):
+def produce(usb_pipe, gui_exit, out_q, in_q):
     while not gui_exit.is_set():
-        if not q.full():
+        # Receive from USB process
+        if not out_q.full():
             if usb_pipe.poll(0.1):
                 new_packet = usb_pipe.recv()
-                q.put(new_packet)
+                out_q.put(new_packet)
+
+        # Transmit to USB process
+        try:
+            new_cmd_packet = in_q.get(block=False)
+            usb_pipe.send(new_cmd_packet)
+        except queue.Empty:
+            pass
 
 
 def run(usb_pipe, gui_exit):
@@ -89,6 +100,11 @@ def run(usb_pipe, gui_exit):
 
     usb_pipe -- pipe to/from USB process
     gui_exit -- gui exit signal"""
+
+    in_q = queue.Queue()   # Data from producer
+    out_q = queue.Queue()  # Data to producer
+    producer = threading.Thread(target=produce, args=(usb_pipe, gui_exit, in_q, out_q))
+    producer.start()
 
     # # For debugging: ######################################################
     #
@@ -109,13 +125,8 @@ def run(usb_pipe, gui_exit):
     # time.sleep(60)
     # # End debugging: ######################################################
 
-    q = queue.Queue()
-    producer = threading.Thread(target=produce, args=(usb_pipe, gui_exit, q))
-    producer.start()
-
-
     app = QApplication(sys.argv)
-    main_window = gcs_main_window(usb_pipe)
+    main_window = GcsMainWindow(in_q, out_q)
     main_window.show()
     app.exec_()
 
