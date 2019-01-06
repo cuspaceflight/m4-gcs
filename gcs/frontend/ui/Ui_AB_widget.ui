@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AB_widget</class>
+ <widget class="QWidget" name="AB_widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1651</width>
+    <height>326</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QWidget" name="widget_6" native="true">
+   <property name="geometry">
+    <rect>
+     <x>-10</x>
+     <y>-10</y>
+     <width>1591</width>
+     <height>311</height>
+    </rect>
+   </property>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>1571</width>
+      <height>301</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QWidget" name="layoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>241</x>
+       <y>11</y>
+       <width>1281</width>
+       <height>271</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="channel_1" name="widget" native="true"/>
+      </item>
+      <item>
+       <widget class="channel_2" name="widget_2" native="true"/>
+      </item>
+      <item>
+       <widget class="channel_3" name="widget_3" native="true"/>
+      </item>
+      <item>
+       <widget class="channel_4" name="widget_4" native="true"/>
+      </item>
+      <item>
+       <widget class="channel_5" name="widget_5" native="true"/>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="layoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>170</y>
+       <width>219</width>
+       <height>99</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="0" colspan="2">
+       <widget class="QPushButton" name="pushButton">
+        <property name="font">
+         <font>
+          <pointsize>28</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>ENGAGE</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <pointsize>20</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>STATUS:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="AB_status">
+        <property name="font">
+         <font>
+          <pointsize>20</pointsize>
+         </font>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>channel_1</class>
+   <extends>QWidget</extends>
+   <header>.channel_1</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>channel_2</class>
+   <extends>QWidget</extends>
+   <header>.channel_2</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>channel_3</class>
+   <extends>QWidget</extends>
+   <header>.channel_3</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>channel_4</class>
+   <extends>QWidget</extends>
+   <header>.channel_4</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>channel_5</class>
+   <extends>QWidget</extends>
+   <header>.channel_5</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

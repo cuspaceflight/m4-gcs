@@ -148,8 +148,8 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
                         if gui_exit.is_set():
                             break  # End process
                         else:
-                           log_pipe.send(message)
-                        #   gui_pipe.send(message)
+                            log_pipe.send(message)
+                            gui_pipe.send(message)
 
         else:
             time.sleep(0.1)

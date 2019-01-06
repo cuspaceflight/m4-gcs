@@ -1,4 +1,4 @@
 .idea
-gcs/__pycache__
+*__pycache__
 venv
 gcs/.vs
