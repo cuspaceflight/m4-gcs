@@ -140,8 +140,8 @@ class Packet(object):
         print_func("ID:                  {}\n".format(self.type))
         print_func("Timestamp:           {}\n".format(self.timestamp))
         print_func("Received checksum:   {}\n".format(self.checksum))
-        print_func("Calculated checksum: {}\n".format(self.checksum))
-        print_func("Valid:               {}\n".format(self.checksum))
+        print_func("Calculated checksum: {}\n".format(self.csum_calc))
+        print_func("Valid:               {}\n".format(self.valid))
 
     def printout(self, textbox):
         """Print packet in the gui

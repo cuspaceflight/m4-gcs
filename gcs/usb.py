@@ -135,10 +135,10 @@ def run(port, gui_pipe, log_pipe, gui_exit, usb_ready):
                         # Timeout
                         break
                     else:
-                        if serial_buffer[0] == PcktTypes.CHANNEL_STATUS:
+                        if int(serial_buffer[0]) == PcktTypes.CHANNEL_STATUS:
                             message = ChannelStatusPacket(serial_buffer)
-                        elif serial_buffer[0] == PcktTypes.BANK_STATUS:
-                            message = BankStateCmdPacket(serial_buffer)
+                        elif int(serial_buffer[0]) == PcktTypes.BANK_STATUS:
+                            message = BankStatusPacket(serial_buffer)
                         else:
                             message = Packet(serial_buffer)
 
