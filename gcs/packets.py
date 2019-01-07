@@ -186,7 +186,7 @@ class Packet(object):
 
         print_func -- function to use to print"""
         print_func("## RX ##\n")
-        print_func("ID:                  {}\n".format(self.type))
+        print_func("ID:                  0x{:02X}\n".format(self.type))
         print_func("Timestamp:           {}\n".format(self.timestamp))
         print_func("Received checksum:   {}\n".format(self.checksum))
         print_func("Calculated checksum: {}\n".format(self.csum_calc))
@@ -252,8 +252,8 @@ class BankStatusPacket(Packet):
 
         print_func -- print function to use"""
         super(BankStatusPacket, self).print_with(print_func)
-        print_func("Bank:                {}\n".format(self.bank))
-        print_func("State:               {}\n".format(self.state))
+        print_func("Bank:                0x{:02X}\n".format(self.bank))
+        print_func("State:               0x{:02X}\n".format(self.state))
         print_func("MCU Temp:            {}\n".format(self.mcu_temp))
         print_func("PSU Voltage:         {}\n".format(self.psu_v))
         print_func("Firing Voltage:      {}\n".format(self.firing_v))
@@ -276,10 +276,11 @@ class ChannelStatus(object):
         self.continuity = channel_status[4]
 
     def print_with(self, print_func):
+        print_func("    State:               0x{:02X}\n".format(self.state))
         print_func("    Firing Voltage:      {}\n".format(self.firing_v))
         print_func("    Output Voltage:      {}\n".format(self.output_v))
         print_func("    Output Current:      {}\n".format(self.output_c))
-        print_func("    Continuity:          {}\n\n".format(self.continuity))
+        print_func("    Continuity:          0x{:02X}\n\n".format(self.continuity))
 
     def printout(self, textbox):
         """Print packet in the gui
@@ -353,9 +354,9 @@ class CmdPacket(object):
 
     def print_with(self, print_func):
         print_func("## TX ##\n")
-        print_func("ID:                  {}\n".format(self.type))
+        print_func("ID:                  0x{:02X}\n".format(self.type))
         print_func("Timestamp:           {}\n".format(self.timestamp))
-        print_func("Command:             {}\n".format(self.cmd))
+        print_func("Command:             0x{:02X}\n".format(self.cmd))
         print_func("Checksum:            {}\n".format(self.checksum))
 
     def printout(self, textbox):
@@ -413,8 +414,8 @@ class BankStateCmdPacket(CmdPacket):
 
     def print_with(self, print_func):
         super(BankStateCmdPacket, self).print_with(print_func)
-        print_func("Bank:                {}\n".format(self.bank))
-        print_func("State:               {}\n".format(self.state))
+        print_func("Bank:                0x{:02X}\n".format(self.bank))
+        print_func("State:               0x{:02X}\n".format(self.state))
 
 
 class ValveStateCmdPacket(CmdPacket):
@@ -441,8 +442,8 @@ class ValveStateCmdPacket(CmdPacket):
 
     def print_with(self, print_func):
         super(ValveStateCmdPacket, self).print_with(print_func)
-        print_func("Valve:               {}\n".format(self.valve))
-        print_func("State:               {}\n".format(self.state))
+        print_func("Valve:               0x{:02X}\n".format(self.valve))
+        print_func("State:               0x{:02X}\n".format(self.state))
 
 
 # Internal Packet Definitions #######################################################

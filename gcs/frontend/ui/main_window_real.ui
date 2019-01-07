@@ -92,7 +92,7 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>-208</y>
+             <y>0</y>
              <width>1226</width>
              <height>1016</height>
             </rect>
@@ -672,6 +672,11 @@ color: rgb(255, 255, 255);</string>
             </item>
             <item>
              <widget class="QTextEdit" name="textEdit_printout">
+              <property name="font">
+               <font>
+                <family>Ubuntu Mono</family>
+               </font>
+              </property>
               <property name="readOnly">
                <bool>true</bool>
               </property>
