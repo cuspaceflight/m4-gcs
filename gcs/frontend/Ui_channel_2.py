@@ -13,6 +13,7 @@ class Ui_channel_2(object):
         channel_2.setObjectName("channel_2")
         channel_2.resize(234, 267)
         channel_2.setMinimumSize(QtCore.QSize(234, 267))
+        channel_2.setStyleSheet("background-color: rgb(238, 238, 236);")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(channel_2)
         self.verticalLayout_3.setContentsMargins(1, 1, 1, 1)
         self.verticalLayout_3.setSpacing(3)

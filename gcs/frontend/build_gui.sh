@@ -8,7 +8,6 @@ cd "$parent_path"
 #Example syntax:
 #pyuic5 ui/main_window.ui -o main_window.py
 
-
 #general channel widget
 pyuic5 ui/Ui_channel_widget.ui -o Ui_channel_widget.py
 

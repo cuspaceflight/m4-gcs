@@ -61,6 +61,12 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
 
+        # Manual configuration
+        diagram = QtGui.QPixmap('PID.png')
+        diagram = diagram.scaledToWidth(1226)
+        self.label_background.setPixmap(diagram)
+        #self.widget_PID.setStyleSheet("image: url(./PID.png); background-attachment: fixed")
+
         # Add slots and signals manually
 
         # Start update thread

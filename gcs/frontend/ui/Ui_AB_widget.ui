@@ -36,7 +36,7 @@
     <number>1</number>
    </property>
    <item alignment="Qt::AlignVCenter">
-    <widget class="channel_2" name="widget" native="true">
+    <widget class="channel_1" name="widget" native="true">
      <property name="minimumSize">
       <size>
        <width>234</width>
@@ -56,7 +56,7 @@
     </widget>
    </item>
    <item alignment="Qt::AlignVCenter">
-    <widget class="channel_2" name="widget_3" native="true">
+    <widget class="channel_3" name="widget_3" native="true">
      <property name="minimumSize">
       <size>
        <width>234</width>
@@ -66,7 +66,7 @@
     </widget>
    </item>
    <item alignment="Qt::AlignVCenter">
-    <widget class="channel_2" name="widget_4" native="true">
+    <widget class="channel_4" name="widget_4" native="true">
      <property name="minimumSize">
       <size>
        <width>234</width>
@@ -76,7 +76,7 @@
     </widget>
    </item>
    <item alignment="Qt::AlignVCenter">
-    <widget class="channel_2" name="widget_5" native="true">
+    <widget class="channel_5" name="widget_5" native="true">
      <property name="minimumSize">
       <size>
        <width>234</width>
@@ -92,6 +92,30 @@
    <class>channel_2</class>
    <extends>QWidget</extends>
    <header>.channel_2</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>channel_1</class>
+   <extends>QWidget</extends>
+   <header>.channel_1</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>channel_3</class>
+   <extends>QWidget</extends>
+   <header>.channel_3</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>channel_4</class>
+   <extends>QWidget</extends>
+   <header>.channel_4</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>channel_5</class>
+   <extends>QWidget</extends>
+   <header>.channel_5</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
