@@ -7,7 +7,7 @@ import time
 import queue
 import threading
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import QThread, pyqtSignal, QTimer
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer, Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from multiprocessing import Pipe, Process
 from .frontend.main_window_real import Ui_MainWindow
@@ -74,7 +74,7 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
 
         # Plumbing diagram as background image
         diagram = QtGui.QPixmap('PID.png')
-        diagram = diagram.scaledToWidth(1226)
+        diagram = diagram.scaledToWidth(1226, Qt.SmoothTransformation)
         self.label_background.setPixmap(diagram)
 
         # Fill in channel descriptions
@@ -238,9 +238,8 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
                       self.label_V2,
                       self.label_V3,
                       self.label_V4,
-                      self.label_V6,
-                      self.label_V9,
-                      self.label_V13]
+                      self.label_V6]
+
         elif packet.bank == Bank.BANK_B.value:
             wdgt = self.widget_B
             # TODO: configure from yaml file
@@ -272,7 +271,7 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             if s.state == ValveState.OFF.value:
                 labels[i].setText("CLOSED")
                 labels[i].setStyleSheet('background-color: rgb(239, 41, 41); color: rgb(255, 255, 255);')
-            elif s.state == ValveState.ON.value and i < :
+            elif s.state == ValveState.ON.value and i < 2:
                 labels[i].setText("OPEN")
                 labels[i].setStyleSheet('background-color: rgb(138, 226, 52); color: rgb(0, 0, 0);')
 
