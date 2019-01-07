@@ -90,12 +90,17 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         self.widget_B.widget_chan.chan4.label_description.setText("[Unused]")
         self.widget_B.widget_chan.chan5.label_description.setText("[Unused]")
 
-        # Add slots and signals manually
+        ##
+        # Add slots and signals manually:
+        ##
+
+        # Arming buttons
         self.widget_A.pushButtonArm.clicked.connect(lambda: self.arm_bank(Bank.BANK_A.value, BankState.ARMED.value))
         self.widget_A.pushButtonDisarm.clicked.connect(lambda: self.arm_bank(Bank.BANK_A.value, BankState.SAFE.value))
         self.widget_B.pushButtonArm.clicked.connect(lambda: self.arm_bank(Bank.BANK_B.value, BankState.ARMED.value))
         self.widget_B.pushButtonDisarm.clicked.connect(lambda: self.arm_bank(Bank.BANK_B.value, BankState.SAFE.value))
 
+        # Channel A firing buttons
         self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH1.value, ValveState.ON.value))
         self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
@@ -117,6 +122,7 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         self.widget_A.widget_chan.chan5.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH5.value, ValveState.OFF.value))
 
+        # Channel B firing buttons
         self.widget_B.widget_chan.chan1.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH1.value, ValveState.ON.value))
         self.widget_B.widget_chan.chan1.fields.pushButton_off.clicked.connect(
@@ -137,6 +143,41 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             lambda: self.fire_valve(Valve.B_CH5.value, ValveState.ON.value))
         self.widget_B.widget_chan.chan5.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH5.value, ValveState.OFF.value))
+
+        # TODO: configure from yaml file
+        # Closed
+        self.pushButton_VC1.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH1.value, ValveState.OFF.value))
+        self.pushButton_VC2.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH2.value, ValveState.OFF.value))
+        self.pushButton_VC3.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH3.value, ValveState.OFF.value))
+        self.pushButton_VC4.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH4.value, ValveState.OFF.value))
+        self.pushButton_VC6.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH5.value, ValveState.OFF.value))
+
+        self.pushButton_VC9.clicked.connect(
+            lambda: self.fire_valve(Valve.B_CH1.value, ValveState.OFF.value))
+        self.pushButton_VC13.clicked.connect(
+            lambda: self.fire_valve(Valve.B_CH2.value, ValveState.OFF.value))
+
+        # Open
+        self.pushButton_VO1.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH1.value, ValveState.ON.value))
+        self.pushButton_VO2.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH2.value, ValveState.ON.value))
+        self.pushButton_VO3.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH3.value, ValveState.ON.value))
+        self.pushButton_VO4.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH4.value, ValveState.ON.value))
+        self.pushButton_VO6.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH5.value, ValveState.ON.value))
+
+        self.pushButton_VO9.clicked.connect(
+            lambda: self.fire_valve(Valve.B_CH1.value, ValveState.ON.value))
+        self.pushButton_VO13.clicked.connect(
+            lambda: self.fire_valve(Valve.B_CH2.value, ValveState.ON.value))
 
         self.pushButtonUsbConnect.clicked.connect(lambda: self.toggle_con(self.pushButtonUsbConnect))
 
@@ -192,8 +233,18 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
     def handle_channel_status_packet(self, packet):
         if packet.bank == Bank.BANK_A.value:
             wdgt = self.widget_A
+            # TODO: configure from yaml file
+            labels = [self.label_V1,
+                      self.label_V2,
+                      self.label_V3,
+                      self.label_V4,
+                      self.label_V6,
+                      self.label_V9,
+                      self.label_V13]
         elif packet.bank == Bank.BANK_B.value:
             wdgt = self.widget_B
+            # TODO: configure from yaml file
+            labels = [self.label_V9, self.label_V13]
         else:
             # Invalid packet
             return
@@ -217,6 +268,13 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             channels[i].fields.lineEdit_current.setCursorPosition(0)
             channels[i].fields.lineEdit_cont.setCursorPosition(0)
             channels[i].fields.lineEdit_status.setCursorPosition(0)
+
+            if s.state == ValveState.OFF.value:
+                labels[i].setText("CLOSED")
+                labels[i].setStyleSheet('background-color: rgb(239, 41, 41); color: rgb(255, 255, 255);')
+            elif s.state == ValveState.ON.value:
+                labels[i].setText("OPEN")
+                labels[i].setStyleSheet('background-color: rgb(138, 226, 52); color: rgb(0, 0, 0);')
 
     def handle_bank_status_packet(self, packet):
         if packet.bank == Bank.BANK_A.value:
