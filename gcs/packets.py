@@ -67,7 +67,6 @@ class ValveState(Enum):
 
 
 class BankState(Enum):
-    ENERGISED = 0x1A
     ARMED = 0x1D
     SAFE = 0x12
     ISOLATED = 0x16
@@ -78,13 +77,11 @@ class BankState(Enum):
 
     @classmethod
     def to_string(cls, value):
-        if value == cls.ENERGISED.value:
-            return "ENERGISED"
-        elif value == cls.ARMED.value:
+        if value == cls.ARMED.value:
             return "ARMED"
         elif value == cls.SAFE.value:
             return "SAFE"
-        elif value == cls.ISOLATED:
+        elif value == cls.ISOLATED.value:
             return "ISOLATED"
         else:
             return None
@@ -129,9 +126,9 @@ class Valve(Enum):
 
 
 class Continuity(Enum):
-    CHANNEL_OPEN = 0x00
-    CHANNEL_SHORT = 0xFF
-    CHANNEL_FIRING = 0xAA
+    OPEN = 0x00
+    SHORT = 0xFF
+    FIRING = 0xAA
 
     @classmethod
     def has_value(cls, value):
@@ -139,12 +136,12 @@ class Continuity(Enum):
 
     @classmethod
     def to_string(cls, value):
-        if value == cls.CHANNEL_OPEN.value:
-            return "CHANNEL_OPEN"
-        elif value == cls.CHANNEL_SHORT.value:
-            return "CHANNEL_SHORT"
-        elif value == cls.CHANNEL_FIRING.value:
-            return "CHANNEL_FIRING"
+        if value == cls.OPEN.value:
+            return "OPEN"
+        elif value == cls.SHORT.value:
+            return "SHORT"
+        elif value == cls.FIRING.value:
+            return "FIRING"
         else:
             return None
 
@@ -243,10 +240,10 @@ class BankStatusPacket(Packet):
         self.state = bank_status[1]
         self.valid &= BankState.has_value(self.state)
 
-        self.mcu_temp = bank_status[2]
-        self.psu_v = bank_status[3]
-        self.firing_v = bank_status[4]
-        self.firing_c = bank_status[5]
+        self.mcu_temp = round(bank_status[2], 2)
+        self.psu_v = round(bank_status[3], 2)
+        self.firing_v = round(bank_status[4], 2)
+        self.firing_c = round(bank_status[5], 2)
 
     def print_with(self, print_func):
         """Print with supplied function
@@ -271,9 +268,9 @@ class ChannelStatus(object):
         channel_status = struct.unpack('<BfffB', input_struct)
         # Todo: add comments with units for each
         self.state = channel_status[0]
-        self.firing_v = channel_status[1]
-        self.output_v = channel_status[2]
-        self.output_c = channel_status[3]
+        self.firing_v = round(channel_status[1], 2)
+        self.output_v = round(channel_status[2], 2)
+        self.output_c = round(channel_status[3], 2)
         self.continuity = channel_status[4]
 
     def print_with(self, print_func):
@@ -312,7 +309,7 @@ class ChannelStatusPacket(Packet):
         self.valid &= Bank.has_value(self.bank)
         self.channel_status = []
         for i in range(0, 5):
-            self.channel_status.append(ChannelStatus(payload[i * CHANNEL_STATUS_SIZE:(i + 1) * CHANNEL_STATUS_SIZE]))
+            self.channel_status.append(ChannelStatus(payload[i * CHANNEL_STATUS_SIZE+1:(i + 1) * CHANNEL_STATUS_SIZE+1]))
 
     def print_with(self, print_func):
         """Print with supplied function

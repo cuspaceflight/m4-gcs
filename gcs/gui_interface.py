@@ -10,7 +10,6 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from multiprocessing import Pipe, Process
-#from .frontend import *
 from .frontend.main_window_real import Ui_MainWindow
 import sys
 import os
@@ -37,21 +36,6 @@ class MainThd(QThread):
 
     def __del__(self):
         self.wait()
-
-        # def produce(usb_pipe, gui_exit, out_q, in_q):
-        #     while not gui_exit.is_set():
-        #         # Receive from USB process
-        #         if not out_q.full():
-        #             if usb_pipe.poll(0.1):
-        #                 new_packet = usb_pipe.recv()
-        #                 out_q.put(new_packet)
-        #
-        #         # Transmit to USB process
-        #         try:
-        #             new_cmd_packet = in_q.get(block=False)
-        #             usb_pipe.send(new_cmd_packet)
-        #         except queue.Empty:
-        #             pass
 
     def run(self):
         while not self.gui_exit.is_set():
@@ -116,42 +100,42 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             lambda: self.fire_valve(Valve.A_CH1.value, ValveState.ON.value))
         self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH1.value, ValveState.OFF.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_A.widget_chan.chan2.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH2.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
+        self.widget_A.widget_chan.chan2.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH2.value, ValveState.OFF.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_A.widget_chan.chan3.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH3.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
+        self.widget_A.widget_chan.chan3.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH3.value, ValveState.OFF.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_A.widget_chan.chan4.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH4.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH5.value, ValveState.OFF.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_A.widget_chan.chan4.fields.pushButton_off.clicked.connect(
+            lambda: self.fire_valve(Valve.A_CH4.value, ValveState.OFF.value))
+        self.widget_A.widget_chan.chan5.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH5.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
+        self.widget_A.widget_chan.chan5.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.A_CH5.value, ValveState.OFF.value))
 
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_B.widget_chan.chan1.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH1.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
+        self.widget_B.widget_chan.chan1.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH1.value, ValveState.OFF.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_B.widget_chan.chan2.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH2.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
+        self.widget_B.widget_chan.chan2.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH2.value, ValveState.OFF.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_B.widget_chan.chan3.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH3.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
+        self.widget_B.widget_chan.chan3.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH3.value, ValveState.OFF.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_B.widget_chan.chan4.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH4.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
-            lambda: self.fire_valve(Valve.B_CH5.value, ValveState.OFF.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_on.clicked.connect(
+        self.widget_B.widget_chan.chan4.fields.pushButton_off.clicked.connect(
+            lambda: self.fire_valve(Valve.B_CH4.value, ValveState.OFF.value))
+        self.widget_B.widget_chan.chan5.fields.pushButton_on.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH5.value, ValveState.ON.value))
-        self.widget_A.widget_chan.chan1.fields.pushButton_off.clicked.connect(
+        self.widget_B.widget_chan.chan5.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH5.value, ValveState.OFF.value))
 
         self.pushButtonUsbConnect.clicked.connect(lambda: self.toggle_con(self.pushButtonUsbConnect))
