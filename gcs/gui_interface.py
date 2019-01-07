@@ -140,10 +140,20 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
 
         self.pushButtonUsbConnect.clicked.connect(lambda: self.toggle_con(self.pushButtonUsbConnect))
 
+        self.packet_timer_counter = 0
+        self.packet_timer = QTimer()
+        self.packet_timer.timeout.connect(self.timer_cb)
+        self.packet_timer.start(100)  # ms
+
         # Start update thread
         self.update_thread = MainThd(usb_pipe, gui_exit, window_to_thread_q)
         self.update_thread.new_pckt_sig.connect(self.new_packet)
         self.update_thread.start(QThread.LowPriority)
+
+    def timer_cb(self):
+        self.packet_timer_counter += 1
+        self.lineEdit_timer.setText("{}".format(self.packet_timer_counter/10))
+        self.lineEdit_timer.setCursorPosition(0)
 
     def fire_valve(self, valve, value):
         packet = ValveStateCmdPacket(valve, value)
@@ -164,7 +174,13 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             self.send_out(UsbCommand(False))
 
     def new_packet(self, packet):
-        # Handle new packet
+        """Handle new packet"""
+
+        # First reset the counter
+        self.packet_timer_counter = 0
+        self.lineEdit_timer.setText("{}".format(self.packet_timer_counter))
+        self.lineEdit_timer.setCursorPosition(0)
+
         packet.printout(self.textEdit_printout)
         if not packet.valid:
             return  # Print in terminal but don't display
@@ -196,6 +212,12 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             channels[i].fields.lineEdit_cont.setText(Continuity.to_string(s.continuity))
             channels[i].fields.lineEdit_status.setText(ValveState.to_string(s.state))
 
+            channels[i].fields.lineEdit_supply.setCursorPosition(0)
+            channels[i].fields.lineEdit_valve.setCursorPosition(0)
+            channels[i].fields.lineEdit_current.setCursorPosition(0)
+            channels[i].fields.lineEdit_cont.setCursorPosition(0)
+            channels[i].fields.lineEdit_status.setCursorPosition(0)
+
     def handle_bank_status_packet(self, packet):
         if packet.bank == Bank.BANK_A.value:
             wdgt = self.widget_A
@@ -210,6 +232,12 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         wdgt.lineEdit_psu_v.setText("{}".format(packet.psu_v))
         wdgt.lineEdit_firing_v.setText("{}".format(packet.firing_v))
         wdgt.lineEdit_firing_i.setText("{}".format(packet.firing_c))
+
+        wdgt.lineEdit_state.setCursorPosition(0)
+        wdgt.lineEdit_mcu_temp.setCursorPosition(0)
+        wdgt.lineEdit_psu_v.setCursorPosition(0)
+        wdgt.lineEdit_firing_v.setCursorPosition(0)
+        wdgt.lineEdit_firing_i.setCursorPosition(0)
 
     def send_out(self, packet):
         # Send a packet to the USB process

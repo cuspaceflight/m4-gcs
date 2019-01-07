@@ -233,7 +233,6 @@ class BankStatusPacket(Packet):
         payload = self.data_struct[PAYLOAD_START:PAYLOAD_END]
 
         bank_status = struct.unpack('<BBffff', payload[0:18])
-        # Todo: add comments with units for each
         self.bank = bank_status[0]
         self.valid &= Bank.has_value(self.bank)
 
@@ -241,7 +240,10 @@ class BankStatusPacket(Packet):
         self.valid &= BankState.has_value(self.state)
 
         self.mcu_temp = round(bank_status[2], 2)
-        self.psu_v = round(bank_status[3], 2)
+        if self.state == BankState.ISOLATED.value:
+            self.psu_v = round(bank_status[3]/1000, 2)  # Received value in mV
+        else:
+            self.psu_v = round(bank_status[3], 2)  # Received value in V
         self.firing_v = round(bank_status[4], 2)
         self.firing_c = round(bank_status[5], 2)
 

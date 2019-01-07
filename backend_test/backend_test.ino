@@ -3,7 +3,7 @@
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial) {
     ; // wait for serial port to connect. 
     }
@@ -14,7 +14,8 @@ void loop() {
 
   //send 128 byte packet over UART
   
-  uint8_t ID = 0b01000101;
+  static uint8_t ID = 1;
+  
   uint32_t timestamp = 6787;
 
   uint8_t meta_data[METADATALEN];
@@ -29,9 +30,13 @@ void loop() {
   for(int i = 0; i < BUFLEN; i++){
     buffer_data[i] = i & 0xFF;
   }
-    
+  uint8_t start_byte = 0x7E;
+  Serial.write(&start_byte, 1);
   Serial.write(meta_data, sizeof(meta_data));
   Serial.write(buffer_data, sizeof(buffer_data));
 
-  delay(1000);
+  if(ID==1) ID=2;
+  else ID=1;
+
+  delay(3000);
 }
