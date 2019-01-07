@@ -162,7 +162,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_on_2">
+         <widget class="QPushButton" name="pushButton_off">
           <property name="font">
            <font>
             <weight>75</weight>

@@ -89,7 +89,7 @@
        </widget>
       </item>
       <item>
-       <widget class="channel_widget" name="widget" native="true">
+       <widget class="channel_widget" name="fields" native="true">
         <property name="minimumSize">
          <size>
           <width>220</width>

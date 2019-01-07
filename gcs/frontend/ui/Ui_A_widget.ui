@@ -84,7 +84,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QLineEdit" name="AB_status_4">
+           <widget class="QLineEdit" name="lineEdit_state">
             <property name="minimumSize">
              <size>
               <width>100</width>
@@ -117,7 +117,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="AB_status_3">
+           <widget class="QLineEdit" name="lineEdit_mcu_temp">
             <property name="font">
              <font>
               <pointsize>14</pointsize>
@@ -157,7 +157,7 @@
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="QLineEdit" name="AB_status_2">
+           <widget class="QLineEdit" name="lineEdit_psu_v">
             <property name="font">
              <font>
               <pointsize>14</pointsize>
@@ -196,7 +196,7 @@
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QLineEdit" name="AB_status">
+           <widget class="QLineEdit" name="lineEdit_firing_v">
             <property name="font">
              <font>
               <pointsize>14</pointsize>
@@ -235,7 +235,7 @@
            </widget>
           </item>
           <item row="4" column="1">
-           <widget class="QLineEdit" name="AB_status_5">
+           <widget class="QLineEdit" name="lineEdit_firing_i">
             <property name="font">
              <font>
               <pointsize>14</pointsize>
@@ -266,7 +266,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="pushButtonArm">
             <property name="font">
              <font>
               <pointsize>14</pointsize>
@@ -283,7 +283,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="pushButtonDisarm">
             <property name="font">
              <font>
               <pointsize>14</pointsize>
@@ -305,7 +305,7 @@ color: rgb(255, 255, 255);</string>
        </layout>
       </item>
       <item>
-       <widget class="AB_widget" name="widget" native="true">
+       <widget class="AB_widget" name="widget_chan" native="true">
         <property name="minimumSize">
          <size>
           <width>1180</width>

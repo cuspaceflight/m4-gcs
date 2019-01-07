@@ -56,6 +56,15 @@ class ValveState(Enum):
     def has_value(cls, value):
         return any(value == item.value for item in cls)
 
+    @classmethod
+    def to_string(cls, value):
+        if value == cls.ON.value:
+            return "ON"
+        elif value == cls.OFF.value:
+            return "OFF"
+        else:
+            return None
+
 
 class BankState(Enum):
     ENERGISED = 0x1A
@@ -67,6 +76,19 @@ class BankState(Enum):
     def has_value(cls, value):
         return any(value == item.value for item in cls)
 
+    @classmethod
+    def to_string(cls, value):
+        if value == cls.ENERGISED.value:
+            return "ENERGISED"
+        elif value == cls.ARMED.value:
+            return "ARMED"
+        elif value == cls.SAFE.value:
+            return "SAFE"
+        elif value == cls.ISOLATED:
+            return "ISOLATED"
+        else:
+            return None
+
 
 class Bank(Enum):
     BANK_A = 0xA0
@@ -75,6 +97,15 @@ class Bank(Enum):
     @classmethod
     def has_value(cls, value):
         return any(value == item.value for item in cls)
+
+    @classmethod
+    def to_string(cls, value):
+        if value == cls.BANK_A.value:
+            return "BANK_A"
+        elif value == cls.BANK_B.value:
+            return "BANK_B"
+        else:
+            return None
 
 
 class Valve(Enum):
@@ -95,6 +126,27 @@ class Valve(Enum):
     @classmethod
     def has_value(cls, value):
         return any(value == item.value for item in cls)
+
+
+class Continuity(Enum):
+    CHANNEL_OPEN = 0x00
+    CHANNEL_SHORT = 0xFF
+    CHANNEL_FIRING = 0xAA
+
+    @classmethod
+    def has_value(cls, value):
+        return any(value == item.value for item in cls)
+
+    @classmethod
+    def to_string(cls, value):
+        if value == cls.CHANNEL_OPEN.value:
+            return "CHANNEL_OPEN"
+        elif value == cls.CHANNEL_SHORT.value:
+            return "CHANNEL_SHORT"
+        elif value == cls.CHANNEL_FIRING.value:
+            return "CHANNEL_FIRING"
+        else:
+            return None
 
 
 # TODO: define ack packets
@@ -292,7 +344,7 @@ class CmdPacket(object):
         """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<{}x'.format(self.num_padding))  # Remaining payload
         self.checksum = fletcher32(self.packed_bytes)
-        self.pack_checksum(self)
+        self.pack_checksum()
 
     def pack_checksum(self):
         """Calculate checksum using packed bytes & append it to the bytes"""
@@ -301,7 +353,7 @@ class CmdPacket(object):
         self.packed_bytes += struct.pack('<I', self.checksum)
 
     def print_with(self, print_func):
-        print_func("## TX ##")
+        print_func("## TX ##\n")
         print_func("ID:                  {}\n".format(self.type))
         print_func("Timestamp:           {}\n".format(self.timestamp))
         print_func("Command:             {}\n".format(self.cmd))
@@ -320,7 +372,7 @@ class CmdPacket(object):
         """Log packet in human readable text file
 
         filename -- absolute path to .txt log file"""
-        self.print_with(self, filename.write)
+        self.print_with(filename.write)
         filename.write("\n\n")
 
     def print_to_js(self, filename):
@@ -334,7 +386,7 @@ class CmdPacket(object):
 
     def print_to_terminal(self):
         """Print to the terminal, useful for debugging"""
-        self.print_with(self, print)
+        self.print_with(print)
         print("\n\n")
 
 
@@ -352,13 +404,13 @@ class BankStateCmdPacket(CmdPacket):
         self.state = state
         self.num_padding -= 2
 
-        self.pack_cmd(self)
+        self.pack_cmd()
 
     def pack_cmd(self):
         """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<BB', self.bank, self.state)
         self.packed_bytes += struct.pack('<{}x'.format(self.num_padding))  # Remaining payload
-        self.pack_checksum(self)
+        self.pack_checksum()
 
     def print_with(self, print_func):
         super(BankStateCmdPacket, self).print_with(print_func)
@@ -380,13 +432,13 @@ class ValveStateCmdPacket(CmdPacket):
         self.state = state
         self.num_padding -= 2
 
-        self.pack_cmd(self)
+        self.pack_cmd()
 
     def pack_cmd(self):
         """Pack fields into byte form for transmission over USB"""
         self.packed_bytes += struct.pack('<BB', self.valve, self.state)
         self.packed_bytes += struct.pack('<{}x'.format(self.num_padding))  # Remaining payload
-        self.pack_checksum(self)
+        self.pack_checksum()
 
     def print_with(self, print_func):
         super(ValveStateCmdPacket, self).print_with(print_func)
@@ -401,3 +453,9 @@ class UsbCommand(object):
     """Command (from GUI to USB process) to enable/disable serial connection"""
     def __init__(self, conn):
         self.conn = conn
+
+    def printout(self, textedit):
+        textedit.moveCursor(QtGui.QTextCursor.End)
+        textedit.ensureCursorVisible()
+        textedit.insertPlainText("USB Command:         {}".format(self.conn))
+        textedit.insertPlainText("\n\n")

@@ -84,15 +84,15 @@ class Ui_channel_widget(object):
         self.pushButton_on.setStyleSheet("background-color: rgb(138, 226, 52);")
         self.pushButton_on.setObjectName("pushButton_on")
         self.horizontalLayout.addWidget(self.pushButton_on)
-        self.pushButton_on_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_off = QtWidgets.QPushButton(self.frame)
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
-        self.pushButton_on_2.setFont(font)
-        self.pushButton_on_2.setStyleSheet("background-color: rgb(239, 41, 41);\n"
+        self.pushButton_off.setFont(font)
+        self.pushButton_off.setStyleSheet("background-color: rgb(239, 41, 41);\n"
 "color: rgb(255, 255, 255);")
-        self.pushButton_on_2.setObjectName("pushButton_on_2")
-        self.horizontalLayout.addWidget(self.pushButton_on_2)
+        self.pushButton_off.setObjectName("pushButton_off")
+        self.horizontalLayout.addWidget(self.pushButton_off)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addWidget(self.frame)
 
@@ -111,5 +111,5 @@ class Ui_channel_widget(object):
         self.label_2.setText(_translate("channel_widget", "Cont"))
         self.label_6.setText(_translate("channel_widget", "STATUS:"))
         self.pushButton_on.setText(_translate("channel_widget", "On"))
-        self.pushButton_on_2.setText(_translate("channel_widget", "Off"))
+        self.pushButton_off.setText(_translate("channel_widget", "Off"))
 
