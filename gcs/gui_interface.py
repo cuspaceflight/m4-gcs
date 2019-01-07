@@ -272,7 +272,7 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             if s.state == ValveState.OFF.value:
                 labels[i].setText("CLOSED")
                 labels[i].setStyleSheet('background-color: rgb(239, 41, 41); color: rgb(255, 255, 255);')
-            elif s.state == ValveState.ON.value:
+            elif s.state == ValveState.ON.value and i < :
                 labels[i].setText("OPEN")
                 labels[i].setStyleSheet('background-color: rgb(138, 226, 52); color: rgb(0, 0, 0);')
 
