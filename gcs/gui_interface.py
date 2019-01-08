@@ -201,14 +201,7 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         self.lineEdit_timer.setCursorPosition(0)
 
     def fire_valve(self, valve, value):
-        if valve == Valve.B_CH3.value:
-            # Ignitor, check before igniting!
-            # msgb = QMessageBox()
-            # msgb.setIcon(QMessageBox.Warning)
-            # msgb.setText("Are you sure you wish to start the ignitor?")
-            # msgb.setWindowTitle("Start Ignitor")
-            # msgb.setStandardButtons(QMessageBox.Yes, QMessageBox.Cancel)
-            # msgb.button
+        if valve == Valve.B_CH3.value and value == ValveState.ON.value:
             reply = QMessageBox.question(self, "Confirm Ignition!",
                                          "Are you sure you wish to start the ignitor?",
                                          QMessageBox.Yes, QMessageBox.Cancel)

@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_channels">
        <attribute name="title">
@@ -662,8 +662,8 @@ color: rgb(255, 255, 255);</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1238</width>
-             <height>607</height>
+             <width>374</width>
+             <height>121</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_5">
