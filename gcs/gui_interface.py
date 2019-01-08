@@ -8,7 +8,7 @@ import queue
 import threading
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer, Qt
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from multiprocessing import Pipe, Process
 from .frontend.main_window_real import Ui_MainWindow
 import sys
@@ -161,6 +161,8 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             lambda: self.fire_valve(Valve.B_CH1.value, ValveState.OFF.value))
         self.pushButton_VC13.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH2.value, ValveState.OFF.value))
+        self.pushButton_IC.clicked.connect(
+            lambda: self.fire_valve(Valve.B_CH3.value, ValveState.OFF.value))
 
         # Open
         self.pushButton_VO1.clicked.connect(
@@ -178,6 +180,8 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             lambda: self.fire_valve(Valve.B_CH1.value, ValveState.ON.value))
         self.pushButton_VO13.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH2.value, ValveState.ON.value))
+        self.pushButton_IO.clicked.connect(
+            lambda: self.fire_valve(Valve.B_CH3.value, ValveState.ON.value))
 
         self.pushButtonUsbConnect.clicked.connect(lambda: self.toggle_con(self.pushButtonUsbConnect))
 
@@ -197,6 +201,21 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         self.lineEdit_timer.setCursorPosition(0)
 
     def fire_valve(self, valve, value):
+        if valve == Valve.B_CH3.value:
+            # Ignitor, check before igniting!
+            # msgb = QMessageBox()
+            # msgb.setIcon(QMessageBox.Warning)
+            # msgb.setText("Are you sure you wish to start the ignitor?")
+            # msgb.setWindowTitle("Start Ignitor")
+            # msgb.setStandardButtons(QMessageBox.Yes, QMessageBox.Cancel)
+            # msgb.button
+            reply = QMessageBox.question(self, "Confirm Ignition!",
+                                         "Are you sure you wish to start the ignitor?",
+                                         QMessageBox.Yes, QMessageBox.Cancel)
+
+            if reply != QMessageBox.Yes:
+                return
+
         packet = ValveStateCmdPacket(valve, value)
         self.send_out(packet)
 
@@ -239,11 +258,15 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
                       self.label_V3,
                       self.label_V4,
                       self.label_V6]
+            is_b = False
 
         elif packet.bank == Bank.BANK_B.value:
             wdgt = self.widget_B
             # TODO: configure from yaml file
-            labels = [self.label_V9, self.label_V13]
+            labels = [self.label_V9,
+                      self.label_V13,
+                      self.label_I]
+            is_b = True
         else:
             # Invalid packet
             return
@@ -268,11 +291,16 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             channels[i].fields.lineEdit_cont.setCursorPosition(0)
             channels[i].fields.lineEdit_status.setCursorPosition(0)
 
-            if s.state == ValveState.OFF.value:
-                labels[i].setText("CLOSED")
+            if is_b and i == 3:
+                txt = ("OFF", "ON")  # ignitor
+            else:
+                txt = ("CLOSED", "OPEN")  # valve
+
+            if s.state == ValveState.OFF.value and i < len(labels):
+                labels[i].setText(txt[0])
                 labels[i].setStyleSheet('background-color: rgb(239, 41, 41); color: rgb(255, 255, 255);')
-            elif s.state == ValveState.ON.value and i < 2:
-                labels[i].setText("OPEN")
+            elif s.state == ValveState.ON.value and i < len(labels):
+                labels[i].setText(txt[1])
                 labels[i].setStyleSheet('background-color: rgb(138, 226, 52); color: rgb(0, 0, 0);')
 
     def handle_bank_status_packet(self, packet):
