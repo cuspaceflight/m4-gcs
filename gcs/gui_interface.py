@@ -25,6 +25,38 @@ except AttributeError:
         return s
 
 
+class ValveMap(object):
+    def __init__(self, description, channel, telem_widget, diag_button_closed=None, diag_button_open=None,
+                 diag_indicator=None, fire_func=None, offtext="CLOSED", ontext="OPEN"):
+        self.description = description
+        self.channel = channel
+        self.telem_widget = telem_widget
+        self.dbc = diag_button_closed
+        self.dbo = diag_button_open
+        self.di = diag_indicator
+        self.fire_func = fire_func
+        self.offtext = offtext
+        self.ontext = ontext
+
+        self.telem_widget.label_description.setText(description)  # Fill in channel description
+        if self.fire_func is not None:
+            if self.dbc is not None:
+                self.dbc.clicked.connect(
+                    lambda: self.fire_func(self.channel, ValveState.OFF.value))
+            if self.dbo is not None:
+                self.dbo.clicked.connect(
+                    lambda: self.fire_func(self.channel, ValveState.ON.value))
+
+    def set_indicator(self, on):
+        if self.di is not None:
+            if on:
+                self.di.setText(self.ontext)
+                self.di.setStyleSheet('background-color: rgb(138, 226, 52); color: rgb(0, 0, 0);')
+            else:
+                self.di.setText(self.offtext)
+                self.di.setStyleSheet('background-color: rgb(239, 41, 41); color: rgb(255, 255, 255);')
+
+
 class MainThd(QThread):
     new_pckt_sig = pyqtSignal(Packet)
 
@@ -77,18 +109,33 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         diagram = diagram.scaledToWidth(1226, Qt.SmoothTransformation)
         self.label_background.setPixmap(diagram)
 
-        # Fill in channel descriptions
+        ###
+        # Channel Mapping
         # TODO: parse from yaml file
-        self.widget_A.widget_chan.chan1.label_description.setText("NOS Bottle 1")
-        self.widget_A.widget_chan.chan2.label_description.setText("Fill Line Vent")
-        self.widget_A.widget_chan.chan3.label_description.setText("NOS Bottle 2")
-        self.widget_A.widget_chan.chan4.label_description.setText("Flight Tank Vent")
-        self.widget_A.widget_chan.chan5.label_description.setText("Flight Tank Isolation")
-        self.widget_B.widget_chan.chan1.label_description.setText("Air Supply")
-        self.widget_B.widget_chan.chan2.label_description.setText("Propane Supply")
-        self.widget_B.widget_chan.chan3.label_description.setText("Ignitor")
-        self.widget_B.widget_chan.chan4.label_description.setText("[Unused]")
-        self.widget_B.widget_chan.chan5.label_description.setText("[Unused]")
+        ##
+        nos_1 = ValveMap("NOS Bottle 1", Valve.A_CH1.value, self.widget_A.widget_chan.chan1, self.pushButton_VC1,
+                         self.pushButton_VO1, self.label_V1, self.fire_valve)
+        fill_vent = ValveMap("Fill Line Vent", Valve.A_CH2.value, self.widget_A.widget_chan.chan2, self.pushButton_VC2,
+                             self.pushButton_VO2, self.label_V2, self.fire_valve)
+        nos_2 = ValveMap("NOS Bottle 2", Valve.A_CH3.value, self.widget_A.widget_chan.chan3, self.pushButton_VC3,
+                         self.pushButton_VO3, self.label_V3, self.fire_valve)
+        flight_vent = ValveMap("Flight Tank Vent", Valve.A_CH4.value, self.widget_A.widget_chan.chan4,
+                               self.pushButton_VC4, self.pushButton_VO4, self.label_V4, self.fire_valve)
+        flight_isol = ValveMap("Flight Tank Isolation", Valve.A_CH5.value, self.widget_A.widget_chan.chan5,
+                               self.pushButton_VC6, self.pushButton_VO6, self.label_V6, self.fire_valve)
+
+        air_supply = ValveMap("Air Supply", Valve.B_CH1.value, self.widget_B.widget_chan.chan1, self.pushButton_VC9,
+                              self.pushButton_VO9, self.label_V9, self.fire_valve)
+        propane_supply = ValveMap("Propane Supply", Valve.B_CH2.value, self.widget_B.widget_chan.chan2,
+                                  self.pushButton_VC13, self.pushButton_VO13, self.label_V13, self.fire_valve)
+        ignitor = ValveMap("Ignitor", Valve.B_CH3.value, self.widget_B.widget_chan.chan3, self.pushButton_IC,
+                           self.pushButton_IO, self.label_I, self.fire_valve, "OFF", "ON")
+
+        unused_1 = ValveMap("[Unused]", Valve.B_CH4.value, self.widget_B.widget_chan.chan4)
+        unused_2 = ValveMap("[Unused]", Valve.B_CH5.value, self.widget_B.widget_chan.chan5)
+
+        self.valve_mapping = (nos_1, fill_vent, nos_2, flight_vent, flight_isol,
+                              air_supply, propane_supply, ignitor, unused_1, unused_2)
 
         ##
         # Add slots and signals manually:
@@ -144,44 +191,44 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         self.widget_B.widget_chan.chan5.fields.pushButton_off.clicked.connect(
             lambda: self.fire_valve(Valve.B_CH5.value, ValveState.OFF.value))
 
-        # TODO: configure from yaml file
+        # Diagram Buttons
         # Closed
-        self.pushButton_VC1.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH1.value, ValveState.OFF.value))
-        self.pushButton_VC2.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH2.value, ValveState.OFF.value))
-        self.pushButton_VC3.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH3.value, ValveState.OFF.value))
-        self.pushButton_VC4.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH4.value, ValveState.OFF.value))
-        self.pushButton_VC6.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH5.value, ValveState.OFF.value))
-
-        self.pushButton_VC9.clicked.connect(
-            lambda: self.fire_valve(Valve.B_CH1.value, ValveState.OFF.value))
-        self.pushButton_VC13.clicked.connect(
-            lambda: self.fire_valve(Valve.B_CH2.value, ValveState.OFF.value))
-        self.pushButton_IC.clicked.connect(
-            lambda: self.fire_valve(Valve.B_CH3.value, ValveState.OFF.value))
-
-        # Open
-        self.pushButton_VO1.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH1.value, ValveState.ON.value))
-        self.pushButton_VO2.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH2.value, ValveState.ON.value))
-        self.pushButton_VO3.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH3.value, ValveState.ON.value))
-        self.pushButton_VO4.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH4.value, ValveState.ON.value))
-        self.pushButton_VO6.clicked.connect(
-            lambda: self.fire_valve(Valve.A_CH5.value, ValveState.ON.value))
-
-        self.pushButton_VO9.clicked.connect(
-            lambda: self.fire_valve(Valve.B_CH1.value, ValveState.ON.value))
-        self.pushButton_VO13.clicked.connect(
-            lambda: self.fire_valve(Valve.B_CH2.value, ValveState.ON.value))
-        self.pushButton_IO.clicked.connect(
-            lambda: self.fire_valve(Valve.B_CH3.value, ValveState.ON.value))
+        # self.pushButton_VC1.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH1.value, ValveState.OFF.value))
+        # self.pushButton_VC2.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH2.value, ValveState.OFF.value))
+        # self.pushButton_VC3.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH3.value, ValveState.OFF.value))
+        # self.pushButton_VC4.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH4.value, ValveState.OFF.value))
+        # self.pushButton_VC6.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH5.value, ValveState.OFF.value))
+        #
+        # self.pushButton_VC9.clicked.connect(
+        #     lambda: self.fire_valve(Valve.B_CH1.value, ValveState.OFF.value))
+        # self.pushButton_VC13.clicked.connect(
+        #     lambda: self.fire_valve(Valve.B_CH2.value, ValveState.OFF.value))
+        # self.pushButton_IC.clicked.connect(
+        #     lambda: self.fire_valve(Valve.B_CH3.value, ValveState.OFF.value))
+        #
+        # # Open
+        # self.pushButton_VO1.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH1.value, ValveState.ON.value))
+        # self.pushButton_VO2.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH2.value, ValveState.ON.value))
+        # self.pushButton_VO3.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH3.value, ValveState.ON.value))
+        # self.pushButton_VO4.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH4.value, ValveState.ON.value))
+        # self.pushButton_VO6.clicked.connect(
+        #     lambda: self.fire_valve(Valve.A_CH5.value, ValveState.ON.value))
+        #
+        # self.pushButton_VO9.clicked.connect(
+        #     lambda: self.fire_valve(Valve.B_CH1.value, ValveState.ON.value))
+        # self.pushButton_VO13.clicked.connect(
+        #     lambda: self.fire_valve(Valve.B_CH2.value, ValveState.ON.value))
+        # self.pushButton_IO.clicked.connect(
+        #     lambda: self.fire_valve(Valve.B_CH3.value, ValveState.ON.value))
 
         self.pushButtonUsbConnect.clicked.connect(lambda: self.toggle_con(self.pushButtonUsbConnect))
 
@@ -201,13 +248,13 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
         self.lineEdit_timer.setCursorPosition(0)
 
     def fire_valve(self, valve, value):
-        if valve == Valve.B_CH3.value and value == ValveState.ON.value:
-            reply = QMessageBox.question(self, "Confirm Ignition!",
-                                         "Are you sure you wish to start the ignitor?",
-                                         QMessageBox.Yes, QMessageBox.Cancel)
-
-            if reply != QMessageBox.Yes:
-                return
+        # if valve == Valve.B_CH3.value and value == ValveState.ON.value:
+        #     reply = QMessageBox.question(self, "Confirm Ignition!",
+        #                                  "Are you sure you wish to start the ignitor?",
+        #                                  QMessageBox.Yes, QMessageBox.Cancel)
+        #
+        #     if reply != QMessageBox.Yes:
+        #         return
 
         packet = ValveStateCmdPacket(valve, value)
         self.send_out(packet)
@@ -245,21 +292,10 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
     def handle_channel_status_packet(self, packet):
         if packet.bank == Bank.BANK_A.value:
             wdgt = self.widget_A
-            # TODO: configure from yaml file
-            labels = [self.label_V1,
-                      self.label_V2,
-                      self.label_V3,
-                      self.label_V4,
-                      self.label_V6]
-            is_b = False
 
         elif packet.bank == Bank.BANK_B.value:
             wdgt = self.widget_B
-            # TODO: configure from yaml file
-            labels = [self.label_V9,
-                      self.label_V13,
-                      self.label_I]
-            is_b = True
+
         else:
             # Invalid packet
             return
@@ -284,17 +320,24 @@ class GcsMainWindow(QMainWindow, Ui_MainWindow):
             channels[i].fields.lineEdit_cont.setCursorPosition(0)
             channels[i].fields.lineEdit_status.setCursorPosition(0)
 
-            if is_b and i == 3:
-                txt = ("OFF", "ON")  # ignitor
-            else:
-                txt = ("CLOSED", "OPEN")  # valve
-
-            if s.state == ValveState.OFF.value and i < len(labels):
-                labels[i].setText(txt[0])
-                labels[i].setStyleSheet('background-color: rgb(239, 41, 41); color: rgb(255, 255, 255);')
-            elif s.state == ValveState.ON.value and i < len(labels):
-                labels[i].setText(txt[1])
-                labels[i].setStyleSheet('background-color: rgb(138, 226, 52); color: rgb(0, 0, 0);')
+            for v in self.valve_mapping:
+                if v.telem_widget == channels[i] and v.di is not None:
+                    # Update relevant indicator on diagram
+                    if s.state == ValveState.OFF.value:
+                        v.set_indicator(False)
+                    elif s.state == ValveState.ON.value:
+                        v.set_indicator(True)
+            # if is_b and i == 3:
+            #     txt = ("OFF", "ON")  # ignitor
+            # else:
+            #     txt = ("CLOSED", "OPEN")  # valve
+            #
+            # if s.state == ValveState.OFF.value and i < len(labels):
+            #     labels[i].setText(txt[0])
+            #     labels[i].setStyleSheet('background-color: rgb(239, 41, 41); color: rgb(255, 255, 255);')
+            # elif s.state == ValveState.ON.value and i < len(labels):
+            #     labels[i].setText(txt[1])
+            #     labels[i].setStyleSheet('background-color: rgb(138, 226, 52); color: rgb(0, 0, 0);')
 
     def handle_bank_status_packet(self, packet):
         if packet.bank == Bank.BANK_A.value:
